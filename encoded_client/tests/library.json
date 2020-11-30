@@ -1,0 +1,503 @@
+{
+  "title": "Library",
+  "description": "Schema for submitting a molecular library.",
+  "id": "/profiles/library.json",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "required": [
+    "award",
+    "lab",
+    "nucleic_acid_term_name"
+  ],
+  "identifyingProperties": [
+    "uuid",
+    "accession",
+    "aliases"
+  ],
+  "additionalProperties": false,
+  "mixinProperties": [
+    {
+      "$ref": "mixins.json#/schema_version"
+    },
+    {
+      "$ref": "mixins.json#/uuid"
+    },
+    {
+      "$ref": "mixins.json#/accession"
+    },
+    {
+      "$ref": "mixins.json#/aliases"
+    },
+    {
+      "$ref": "mixins.json#/attribution"
+    },
+    {
+      "$ref": "mixins.json#/accessioned_status"
+    },
+    {
+      "$ref": "mixins.json#/submitted"
+    },
+    {
+      "$ref": "mixins.json#/source"
+    },
+    {
+      "$ref": "mixins.json#/product_id"
+    },
+    {
+      "$ref": "mixins.json#/lot_id"
+    },
+    {
+      "$ref": "mixins.json#/documents"
+    },
+    {
+      "$ref": "mixins.json#/notes"
+    }
+  ],
+  "facets": {
+    "status": {
+      "title": "Library status"
+    }
+  },
+  "dependencies": {
+    "nucleic_acid_starting_quantity_units": [
+      "nucleic_acid_starting_quantity"
+    ],
+    "nucleic_acid_starting_quantity": [
+      "nucleic_acid_starting_quantity_units"
+    ],
+    "product_id": [
+      "source"
+    ],
+    "lot_id": [
+      "source",
+      "product_id"
+    ]
+  },
+  "properties": {
+    "notes": {
+      "title": "Notes",
+      "comment": "A place for the DCC to keep information that does not have a place in the schema.",
+      "pattern": "^(\\S+(\\s|\\S)*\\S+|\\S)$",
+      "readonly": true,
+      "permission": "import_items",
+      "type": "string",
+      "description": "DCC internal notes."
+    },
+    "documents": {
+      "title": "Documents",
+      "uniqueItems": true,
+      "default": [],
+      "type": "array",
+      "description": "Documents that provide additional information (not data file).",
+      "items": {
+        "title": "Document",
+        "comment": "See document.json for available identifiers.",
+        "type": "string",
+        "description": "A document that provides additional information (not data file).",
+        "linkTo": "Document"
+      }
+    },
+    "lot_id": {
+      "title": "Lot ID",
+      "pattern": "^(\\S+(\\s|\\S)*\\S+|\\S)$|^$",
+      "type": "string",
+      "description": "The lot identifier provided by the vendor, for nucleic acids or proteins purchased directly from a vendor (e.g. total RNA)."
+    },
+    "product_id": {
+      "title": "Product ID",
+      "pattern": "^(\\S+(\\s|\\S)*\\S+|\\S)$|^$",
+      "type": "string",
+      "description": "The product identifier provided by the vendor, for nucleic acids or proteins purchased directly from a vendor (e.g. total RNA)."
+    },
+    "source": {
+      "title": "Source",
+      "comment": "See source.json for available identifiers.",
+      "type": "string",
+      "description": "The vendor, for nucleic acids or proteins purchased directly from a vendor (e.g. total RNA).",
+      "linkTo": "Source"
+    },
+    "submitted_by": {
+      "title": "Submitted by",
+      "comment": "Do not submit. The user that created the object is assigned by the server.",
+      "serverDefault": "userid",
+      "permission": "import_items",
+      "linkTo": "User",
+      "type": "string",
+      "readonly": true,
+      "rdfs:subPropertyOf": "dc:creator"
+    },
+    "date_created": {
+      "comment": "Do not submit. The date the object is created is assigned by the server.",
+      "permission": "import_items",
+      "serverDefault": "now",
+      "anyOf": [
+        {
+          "format": "date-time"
+        },
+        {
+          "format": "date"
+        }
+      ],
+      "readonly": true,
+      "title": "Date created",
+      "type": "string",
+      "decription": "The date the object was created.",
+      "rdfs:subPropertyOf": "dc:created"
+    },
+    "status": {
+      "title": "Status",
+      "default": "in progress",
+      "type": "string",
+      "enum": [
+        "in progress",
+        "deleted",
+        "replaced",
+        "released",
+        "revoked"
+      ]
+    },
+    "lab": {
+      "title": "Lab",
+      "comment": "Required. See lab.json for list of available identifiers.",
+      "linkSubmitsFor": true,
+      "linkTo": "Lab",
+      "type": "string",
+      "description": "Lab associated with the submission."
+    },
+    "award": {
+      "title": "Grant",
+      "comment": "Required. See award.json for list of available identifiers.",
+      "type": "string",
+      "description": "Grant associated with the submission.",
+      "linkTo": "Award"
+    },
+    "aliases": {
+      "title": "Lab aliases",
+      "comment": "The purpose of this field is to provide a link into the lab LIMS and to facilitate shared objects.",
+      "uniqueItems": true,
+      "default": [],
+      "type": "array",
+      "description": "Lab specific identifiers to reference an object.",
+      "items": {
+        "title": "Lab alias",
+        "comment": "Current convention is colon separated lab name and lab identifier. (e.g. john-doe:42).",
+        "pattern": "^(?:alexander-hoffmann|alexander-rudensky|alexander-urban|ali-mortazavi|alkes-price|anshul-kundaje|anton-valouev|barbara-wold|bill-noble|bin-yu|bing-ren|bradley-bernstein|brenton-graveley|chris-burge|christina-leslie|colin-dewey|david-gifford|david-gilbert|douglas-black|elliott-margulies|emery-bresnick|encode-awg|encode-consortium|encode-processing-pipeline|erez-lieberman|eric-lecuyer|eric-mendehall|ewan-birney|feng-yue|gene-yeo|george-stamatoyannopoulos|greg-cooper|gregory-crawford|guo-cheng-yuan|haiyan-huang|howard-chang|j-michael-cherry|jason-ernst|jason-lieb|jennifer-harrow|jeremy-luban|job-dekker|joe-ecker|john-lis|john-rinn|john-stamatoyannopoulos|jonathan-pritchard|joseph-costello|kenneth-offit|kevin-struhl|kevin-white|ladeana-hillier|laura-elnitski|len-pennacchio|leonard-lipovich|manolis-kellis|manuel-garber|mark-gerstein|mats-ljungman|matteo-pellegrini|michael-beer|michael-hoffman|michael-snyder|morgan-giddings|nadav-ahituv|paul-khavari|peggy-farnham|peter-bickel|peter-park|piero-carninci|rafael-irizarry|richard-myers|roadmap-epigenomics|robert-klein|robert-waterston|roderic-guigo|ross-hardison|scott-tenenbaum|sherman-weissman|souma-raychaudhuri|stephen-smale|sunduz-keles|susan-celniker|thomas-gingeras|thomas-tullius|tim-reddy|timothy-hubbard|ting-wang|tommi-jaakkola|unknown|valerie-reinke|vishwanath-iyer|w-james-kent|wei-wang|will-greenleaf|xiang-dong-fu|xiaole-shirley|xinshu-xiao|yi-xing|yijun-ruan|yin-shen|yoav-gilad|zhiping-weng|brian-oliver|david-macalpine|hugo-bellen|peter-cherbas|terry-orr-weaver|abby-dernburg|anthony-hyman|arshad-desai|david-miller|eric-lai|fabio-piano|frank-slack|gary-karpen|gregory-hannon|james-posakony|john-kim|julie-ahringer|kamran-ahmad|kris-gunsalus|lincoln-stein|michael-brent|michael-maccoss|mitzi-kuroda|nikolaus-rajewsky|norbert-perrimon|philip-green|sarah-elgin|steven-henikoff|steven-russell|susan-strome|vincenzo-pirrotta|MitaniLab|UofC-HGAC|wesley-hung|encode|modern|dnanexus|modencode|gencode|ggr|cgc|bloomington|dssc|kyoto|gtex|pgp|biochain|promocell|nichd):[a-zA-Z\\d_$.+!*,()'-]+(?:\\s[a-zA-Z\\d_$.+!*,()'-]+)*$",
+        "uniqueKey": "alias",
+        "type": "string",
+        "description": "A lab specific identifier to reference an object."
+      }
+    },
+    "alternate_accessions": {
+      "title": "Alternate accessions",
+      "comment": "Do not submit. Only admins are allowed to set or update this value.",
+      "items": {
+        "title": "Alternate Accession",
+        "comment": "Only accessions of objects that have status equal replaced will work here.",
+        "type": "string",
+        "description": "An accession previously assigned to an object that has been merged with this object.",
+        "format": "accession"
+      },
+      "default": [],
+      "readonly": true,
+      "permission": "import_items",
+      "type": "array",
+      "description": "Accessions previously assigned to objects that have been merged with this object."
+    },
+    "accession": {
+      "comment": "Do not submit. The accession is assigned by the server.",
+      "permission": "import_items",
+      "serverDefault": "accession",
+      "accessionType": "LB",
+      "readonly": true,
+      "description": "A unique identifier to be used to reference the object prefixed with ENC.",
+      "format": "accession",
+      "title": "Accession",
+      "type": "string"
+    },
+    "uuid": {
+      "comment": "Do not submit. The uuid is set by the server.",
+      "permission": "import_items",
+      "requestMethod": "POST",
+      "serverDefault": "uuid4",
+      "readonly": true,
+      "description": "The unique identifier associated with every object.",
+      "format": "uuid",
+      "title": "UUID",
+      "type": "string"
+    },
+    "schema_version": {
+      "title": "Schema Version",
+      "comment": "Do not submit. The version used to validate the object is set by the server. The default should be set to the current version.",
+      "pattern": "^\\d+(\\.\\d+)*$",
+      "type": "string",
+      "default": "7",
+      "requestMethod": [],
+      "description": "The version of the JSON schema that the server uses to validate the object."
+    },
+    "spikeins_used": {
+      "title": "Spike-ins datasets used",
+      "uniqueItems": true,
+      "default": [],
+      "type": "array",
+      "description": "The datasets containing the fasta and the concentrations of the library spike-ins.",
+      "items": {
+        "title": "A spike-ins dataset.",
+        "description": "A specific spike-ins type dataset",
+        "comment": "See dataset.json for available identifiers.",
+        "type": "string",
+        "linkTo": "Reference"
+      }
+    },
+    "biosample": {
+      "title": "Biosample",
+      "comment": "See biosample.json for available identifiers.",
+      "type": "string",
+      "description": "The biosample that nucleic acid was isolated from to generate the library.",
+      "linkTo": "Biosample"
+    },
+    "nucleic_acid_term_name": {
+      "title": "Molecule term",
+      "type": "string",
+      "enum": [
+        "DNA",
+        "RNA",
+        "polyadenylated mRNA",
+        "miRNA",
+        "protein"
+      ],
+      "description": "SO (Sequence Ontology) term best matching the molecule isolated to generate the library (e.g. 'RNA' for a total RNA library, even if that library is subsequently reverse transcribed for DNA sequencing.)"
+    },
+    "dbxrefs": {
+      "title": "External identifiers",
+      "@type": "@id",
+      "uniqueItems": true,
+      "default": [],
+      "type": "array",
+      "description": "Unique identifiers from external resources.",
+      "items": {
+        "title": "External identifier",
+        "description": "A unique identifier from external resource.",
+        "type": "string",
+        "pattern": "^(GEO:GSM\\d+|GEO-obsolete:GSM\\d+)$"
+      },
+      "rdfs:subPropertyOf": "rdfs:seeAlso"
+    },
+    "nucleic_acid_starting_quantity": {
+      "title": "Nucleic acid starting quantity",
+      "pattern": "[0-9]+",
+      "type": "string",
+      "description": "The starting amount of nucleic acid before selection and purification."
+    },
+    "nucleic_acid_starting_quantity_units": {
+      "title": "Nucleic acid starting quantity units",
+      "type": "string",
+      "enum": [
+        "cells",
+        "cell-equivalent",
+        "µg",
+        "ng",
+        "pg",
+        "mg"
+      ],
+      "description": "The units used for starting amount of nucleic acid."
+    },
+    "extraction_method": {
+      "title": "Extraction method",
+      "XXXenum": [
+        "miRNeasy Mini kit (QIAGEN cat#:217004)",
+        "Trizol (LifeTech cat#: 15596-018)",
+        "Ambion mirVana",
+        "Qiagen #74204",
+        "QIAGEN DNeasy Blood & Tissue Kit",
+        "see document",
+        "n/a"
+      ],
+      "type": "string",
+      "description": "A short description or reference of the nucleic acid extraction protocol used in library preparation, if applicable.",
+      "format": "semi-controlled"
+    },
+    "fragmentation_method": {
+      "title": "Fragmentation method",
+      "type": "string",
+      "enum": [
+        "chemical (generic)",
+        "chemical (DNaseI)",
+        "chemical (RNase III)",
+        "chemical (HindIII restriction)",
+        "chemical (MboI restriction)",
+        "chemical (NcoI restriction)",
+        "chemical (DpnII restriction)",
+        "chemical (HindIII/DpnII restriction)",
+        "chemical (Tn5 transposase)",
+        "chemical (micrococcal nuclease)",
+        "chemical (Illumina TruSeq)",
+        "chemical (Nextera tagmentation)",
+        "shearing (generic)",
+        "shearing (Covaris generic)",
+        "shearing (Covaris S2)",
+        "sonication (generic)",
+        "sonication (Bioruptor generic)",
+        "sonication (Bioruptor Pico)",
+        "sonication (Bioruptor Plus)",
+        "sonication (Bioruptor Twin)",
+        "sonication (generic microtip)",
+        "sonication (Branson Sonifier 250)",
+        "sonication (Branson Sonifier 450)",
+        "sonication (Sonics VCX130)",
+        "shearing (Covaris LE Series)",
+        "see document",
+        "none",
+        "n/a"
+      ],
+      "description": "A short description or reference of the nucleic acid fragmentation protocol used in library preparation, if applicable."
+    },
+    "fragmentation_date": {
+      "title": "Fragmentation date",
+      "comment": "Date can be submitted in as YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSTZD (TZD is the time zone designator; use Z to express time in UTC or for time expressed in local time add a time zone offset from UTC +HH:MM or -HH:MM).",
+      "type": "string",
+      "anyOf": [
+        {
+          "format": "date-time"
+        },
+        {
+          "format": "date"
+        }
+      ],
+      "description": "The date that the nucleic acid was fragmented."
+    },
+    "library_size_selection_method": {
+      "title": "Size selection method",
+      "XXXenum": [
+        "gel",
+        "see document",
+        "SPRI beads",
+        "BluePippin",
+        "Agencourt AMPure XP"
+      ],
+      "type": "string",
+      "description": "A short description or reference of the size selection protocol used in library preparation, if applicable.",
+      "format": "semi-controlled"
+    },
+    "lysis_method": {
+      "title": "Lysis method",
+      "XXXenum": [
+        "miRNeasy Mini kit (QIAGEN cat#:217004)",
+        "Trizol (LifeTech cat#: 15596-018)",
+        "Ambion mirVana",
+        "Qiagen #74204",
+        "QIAGEN DNeasy Blood & Tissue Kit",
+        "see document",
+        "n/a"
+      ],
+      "type": "string",
+      "description": "A short description or reference of the cell lysis protocol used in library preparation, if applicable",
+      "format": "semi-controlled"
+    },
+    "crosslinking_method": {
+      "title": "Crosslinking method",
+      "type": "string",
+      "enum": [
+        "formaldehyde",
+        "EGS and formaldehyde",
+        "ultraviolet irradiation"
+      ],
+      "description": "A short description or reference of the crosslinking protocol used in library preparation, if applicable."
+    },
+    "size_range": {
+      "title": "Size range",
+      "pattern": "(^[0-9]+-[0-9]+$|^[<>][0-9]+$)",
+      "type": "string",
+      "description": "The measured size range of the purified nucleic acid, in bp."
+    },
+    "strand_specificity": {
+      "title": "Strand specific",
+      "type": "boolean",
+      "default": false,
+      "description": "The preparation of the library uses a strand-specific protocol."
+    },
+    "treatments": {
+      "title": "Treatments",
+      "type": "array",
+      "default": [],
+      "items": {
+        "title": "Treatment",
+        "comment": "See treatment.json for available identifiers.",
+        "type": "string",
+        "linkTo": "Treatment"
+      },
+      "uniqueItems": true
+    },
+    "depleted_in_term_name": {
+      "title": "Depleted in term",
+      "type": "array",
+      "description": "SO (Sequence Ontology) term best matching the nucleic acid that was diminished from the library.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "rRNA",
+          "polyadenylated mRNA",
+          "capped mRNA"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "@type": {
+      "title": "Type",
+      "calculatedProperty": true,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "nucleic_acid_term_id": {
+      "title": "nucleic_acid_term_id",
+      "type": "string",
+      "calculatedProperty": true
+    },
+    "@id": {
+      "title": "ID",
+      "type": "string",
+      "calculatedProperty": true
+    },
+    "depleted_in_term_id": {
+      "title": "depleted_in_term_id",
+      "type": "string",
+      "calculatedProperty": true
+    }
+  },
+  "columns": {
+    "accession": {
+      "title": "Accession"
+    },
+    "award": {
+      "title": "Award"
+    },
+    "lab": {
+      "title": "Lab"
+    },
+    "biosample.biosample_term_name": {
+      "title": "Biosample"
+    },
+    "biosample.organism.name": {
+      "title": "Species"
+    },
+    "nucleic_acid_term_name": {
+      "title": "Nucleic Acid Term Name"
+    }
+  },
+  "boost_values": {
+    "accession": 1,
+    "alternate_accessions": 1,
+    "aliases": 1,
+    "biosample.accession": 1,
+    "biosample.alternate_accessions": 1,
+    "biosample.aliases": 1,
+    "biosample.donor.accession": 1,
+    "biosample.donor.organism.name": 1,
+    "notes": 1
+  },
+  "changelog": "/profiles/changelogs/library.md",
+  "@type": [
+    "JSONSchema"
+  ]
+}

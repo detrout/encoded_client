@@ -1,0 +1,378 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix htswlib: <http://jumpgate.caltech.edu/wiki/LibraryOntology#> .
+
+# I'm still learning how to do modeling & validation
+# this version is just using rdfs:Literal for
+# any literal node.
+
+<http://jumpgate.caltech.edu/wiki/LibraryOntology#>
+    dc:title "HTS-Workflow ontology" ;
+    a owl:Ontology .
+
+htswlib:Class rdfs:subClassOf rdfs:Class ;
+              a rdfs:Class .
+rdfs:Resource a rdfs:Class.
+
+htswlib:IlluminaFlowcell
+    a rdfs:Class, htswlib:Class;
+    rdfs:comment "information about a illumina flowcell" ;
+    rdfs:label "Flowcell" .
+
+htswlib:IlluminaLane
+    a rdfs:Class, htswlib:Class ;
+    rdfs:comment "information specific to a lane in a flowcell" ;
+    rdfs:label "Lane" .
+
+htswlib:Library
+    a rdfs:Class, htswlib:Class ;
+    rdfs:comment "a biological library that can be run on a flowcell" ;
+    rdfs:label "library" .
+
+htswlib:Sequencer
+    a rdfs:Class, htswlib:Class;
+    rdfs:comment "an instrument that converts libraries into sequence reads" ;
+    rdfs:label "Sequencer" .
+
+htswlib:Species
+    a rdfs:Class, htswlib:Class ;
+    rdfs:comment "What 'species' was our sample created from." ;
+    rdfs:label "Species" .
+
+htswlib:MappedCount
+    a rdfs:Class, htswlib:Class ;
+    rdfs:comment "Count of reads with locations" ;
+    rdfs:label "Mapped locations" .
+
+# reused properties?
+htswlib:flowcell
+    a rdf:Property ;
+    rdfs:comment "link to our source flowcell" ;
+    rdfs:label "Flowcell" ;
+    rdfs:domain htswlib:IlluminaLane ;
+    rdfs:range htswlib:IlluminaFlowcell .
+
+htswlib:has_lane
+    a rdf:Property ;
+    rdfs:comment "which lanes are attached to a flowcell" ;
+    rdfs:label "lanes" ;
+    # cheating, only flowcells & libraries can have lanes
+    rdfs:domain htswlib:Library ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range htswlib:IlluminaLane .
+
+htswlib:date
+    a rdf:Property ;
+    rdfs:comment "Date thing was constructed" ;
+    rdfs:label "made on" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range xsd:dateTime .
+
+htswlib:total_unique_locations
+    a rdf:Property ;
+    rdfs:comment "How many reads mapped uniquely" ;
+    rdfs:label "Unique locations" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:domain htswlib:IlluminaLane ;
+    rdfs:range xsd:integer .
+
+htswlib:has_mappings
+    a rdf:Property ;
+    rdfs:comment "collection of counts against sequence collections" ;
+    rdfs:label "Has mapping" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:domain htswlib:IlluminaLane ;
+    rdfs:range htswlib:MappedCount .
+
+# flowcell properties
+htswlib:flowcell_id
+    a rdf:Property ;
+    rdfs:comment "Serial number of a flowcell, used as unique key" ;
+    rdfs:label "Flowcell ID" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range rdfs:Literal .
+
+htswlib:flowcell_notes
+    a rdf:Property ;
+    rdfs:comment "Comments about flowcell" ;
+    rdfs:label "Notes" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range rdfs:Literal .
+
+htswlib:control_lane
+    a rdf:Property ;
+    rdfs:comment "Control lane used for image analysis/base calling" ;
+    rdfs:label "Control Lane" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range rdfs:Literal .
+
+htswlib:read_length
+    a rdf:Property ;
+    rdfs:comment "How many cycles did we run the sequencer for" ;
+    rdfs:label "Read length" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range rdfs:Literal .
+
+htswlib:flowcell_type
+    a rdf:Property ;
+    rdfs:comment "What kind of flowcell, e.g. single, paired." ;
+    rdfs:label "Flowcell Type" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range rdfs:Literal .
+
+htswlib:image_software
+    a rdf:Property ;
+    rdfs:comment "Image analysis software name." ;
+    rdfs:label "Image processor" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range rdfs:Literal .
+
+htswlib:image_version
+    a rdf:Property ;
+    rdfs:comment "Image analysis software version identifier." ;
+    rdfs:label "Image processor version" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range rdfs:Literal .
+
+htswlib:basecall_software
+    a rdf:Property ;
+    rdfs:comment "Base caller software name." ;
+    rdfs:label "Basecaller" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range rdfs:Literal .
+
+htswlib:basecall_version
+    a rdf:Property ;
+    rdfs:comment "Base caller software version identifier." ;
+    rdfs:label "Basecaller Version" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range rdfs:Literal .
+
+htswlib:alignment_software
+    a rdf:Property ;
+    rdfs:comment "Alignment software name." ;
+    rdfs:label "Alignment software" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range rdfs:Literal .
+
+htswlib:alignment_version
+    a rdf:Property ;
+    rdfs:comment "Alignment software version identifier." ;
+    rdfs:label "Aligner" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range rdfs:Literal .
+
+htswlib:sequenced_by
+    a rdf:Property ;
+    rdfs:comment "Which sequencer sequenced this flowcell" ;
+    rdfs:label "Sequenced By" ;
+    rdfs:domain htswlib:IlluminaFlowcell ;
+    rdfs:range htswlib:Sequencer .
+
+htswlib:sequencer_model
+    a rdf:Property ;
+    rdfs:comment "What model of sequencer was this flowcell run on." ;
+    rdfs:label "Sequencer model" ;
+    rdfs:domain htswlib:Sequencer ;
+    rdfs:range rdfs:Literal .
+
+htswlib:sequencer_instrument
+    a rdf:Property ;
+    rdfs:comment "Sequencer instrument identifier." ;
+    rdfs:label "Instrument ID " ;
+    rdfs:domain htswlib:Sequencer ;
+    rdfs:range rdfs:Literal .
+
+htswlib:sequencer_name
+    a rdf:Property ;
+    rdfs:comment "Local name for sequencer." ;
+    rdfs:label "Sequencer name " ;
+    rdfs:domain htswlib:Sequencer ;
+    rdfs:range rdfs:Literal .
+
+# lane properties
+htswlib:status
+   a rdf:Proprety ;
+   rdfs:comment "Operators opinion of lane status, e.g. were there spots in the pictures" ;
+   rdfs:label "Status" ;
+   rdfs:domain htswlib:IlluminaLane ;
+   rdfs:range htswlib:Literal .
+
+htswlib:cluster_estimate
+   a rdf:Proprety ;
+   rdfs:comment "Estimate of clusters per tile" ;
+   rdfs:label "Cluster Estimate" ;
+   rdfs:domain htswlib:IlluminaLane ;
+   rdfs:range htswlib:Literal .
+
+htswlib:pM
+   a rdf:Proprety ;
+   rdfs:comment "picoMolarity" ;
+   rdfs:label "picoMolarity" ;
+   rdfs:domain htswlib:IlluminaLane ;
+   rdfs:range htswlib:Literal .
+
+
+# library only properties
+htswlib:library_id
+    a rdf:Property ;
+    rdfs:comment "Library unique identifier" ;
+    rdfs:label "Library ID" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range rdfs:Literal .
+
+htswlib:name
+    a rdf:Property ;
+    rdfs:comment "human readable name" ;
+    rdfs:label "Name" ;
+    rdfs:range rdfs:Literal .
+
+htswlib:library_type
+    a rdf:Property ;
+    rdfs:comment """what type of library are we, which is primarily
+                 determined by the type of adaptors ligated onto
+                 sequence fragments.""" ;
+    rdfs:label "Library Type" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range rdfs:Literal .
+
+htswlib:condition
+   a rdf:Property ;
+   rdfs:comment "Describes what treatment has been applied to the cells" ;
+   rdfs:label "Condition" ;
+   rdfs:domain htswlib:Library ;
+   rdfs:range rdfs:Literal .
+
+htswlib:stopping_point
+    a rdf:Property ;
+    rdfs:comment "Protocol stopping point" ;
+    rdfs:label "Stopping Point" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range rdfs:Literal .
+
+htswlib:concentration
+    a rdf:Property ;
+    rdfs:comment "Concentration of sample in nanograms per microliter" ;
+    rdfs:label "Concentration" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range rdfs:Literal .
+
+htswlib:insert_size
+    a rdf:Property ;
+    rdfs:comment "The expected size of the sample sequence" ;
+    rdfs:label "Insert Size" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range rdfs:Literal .
+
+htswlib:gel_cut
+    a rdf:Property ;
+    rdfs:comment "The estimated fragment sizes cut from gel";
+    rdfs:label "Gel Cut" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range xsd:integer .
+
+htswlib:made_by
+    a rdf:Property ;
+    rdfs:comment "Name of person who created library" ;
+    rdfs:label "Made by" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range rdfs:Literal .
+
+htswlib:multiplex_index
+    a rdf:Property ;
+    rdfs:comment "multiplex sequence" ;
+    rdfs:label "index" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range rdfs:Literal .
+
+htswlib:cell_line
+    a rdf:Property ;
+    rdfs:comment "Description of source material" ;
+    rdfs:label "cell line" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range rdfs:Literal .
+
+htswlib:experiment_type
+    a rdf:Property ;
+    rdfs:comment "What type of sequencing is this. e.g. RNA-Seq, DeNovo etc." ;
+    rdfs:label "Experiment Type" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range rdfs:Literal .
+
+htswlib:affiliation
+    a rdf:Property ;
+    rdfs:comment "Entity associated with this sample" ;
+    rdfs:label "affiliation" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range rdfs:Literal .
+
+htswlib:species
+    a rdf:Property ;
+    rdfs:comment "A species class" ;
+    rdfs:label "Species" ;
+    rdfs:domain htswlib:Library ;
+    #rdfs:domain htswlib:IlluminaLane;
+    rdfs:range htswlib:Species .
+
+htswlib:species_name
+   a rdf:Property ;
+   rdfs:comment "Scientific name of sample species" ;
+   rdfs:label "Species name";
+   rdfs:domain htswlib:Species, htswlib:Library ;
+   rdfs:range xsd:string .
+
+htswlib:replicate
+    a rdf:Property ;
+    rdfs:comment "Which replicate this was" ;
+    rdfs:label "replicate" ;
+    rdfs:domain htswlib:Library ;
+    rdfs:range rdfs:Literal .
+
+# lane only properties
+htswlib:lane_number
+    a rdf:Property ;
+    rdfs:comment "Which lane were we run in" ;
+    rdfs:label "lane id" ;
+    rdfs:domain htswlib:IlluminaLane ;
+    rdfs:range rdfs:Literal .
+
+# FIXME: should this be note?
+htswlib:comment
+    a rdf:Property ;
+    rdfs:comment "Comment about an object" ;
+    rdfs:range rdfs:Literal .
+
+htswlib:library
+     a rdf:Property ;
+     rdfs:comment "which library was run on this lane." ;
+     rdfs:label "Library" ;
+     rdfs:domain htswlib:IlluminaLane ;
+     rdfs:range htswlib:Library .
+
+# species properites
+htswlib:species_name
+     a rdf:Property ;
+     rdfs:comment "Scientific name of species" ;
+     rdfs:label "Species" ;
+     rdfs:domain htswlib:Species ;
+     rdfs:range rdfs:Literal .
+
+# mapped count properties
+htswlib:mapped_to
+     a rdf:Property ;
+     rdfs:comment "A sequence collection, genome, chromosome, spike in, etc.";
+     rdfs:label "Mapped to" ;
+     rdfs:domain htswlib:MappedCount ;
+     rdfs:range rdfs:Literal .
+
+htswlib:reads
+     a rdf:Property ;
+     rdfs:comment "Number of read locations" ;
+     rdfs:label "Reads" ;
+     rdfs:domain htswlib:MappedCount ;
+     rdfs:range rdfs:Literal .
