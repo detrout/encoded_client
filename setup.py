@@ -16,7 +16,7 @@ setup(
         #'keyring',
         "jsonschema",
         "requests",
-        "rdflib <= 5.0",
+        "rdflib",
         "xopen",
     ],
 )

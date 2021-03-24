@@ -333,7 +333,10 @@ def get_turtle_header():
     """Return a turtle header with our typical namespaces"""
     empty = ConjunctiveGraph()
     add_default_namespaces(empty)
-    return empty.serialize(format="turtle").decode()
+    turtle_header = []
+    for term, urlterm in empty.namespaces():
+        turtle_header.append("@prefix {}: <{}>.".format(term, urlterm))
+    return "\n".join(turtle_header)
 
 
 def dump_model(model, destination=None):
