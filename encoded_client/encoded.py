@@ -117,8 +117,10 @@ TYPE_TO_COLLECTION = {COLLECTION_TO_TYPE[k]: k for k in COLLECTION_TO_TYPE}
 
 
 class ENCODED:
-    """Programatic access encoded, the software powering ENCODE3's submit site."""
+    """Programatic object orientated access to encoded
 
+    Encoded is the software powering ENCODE3 and 4's submit site.
+    """
     def __init__(self, server, contexts=None, namespaces=None):
         self.server = server
         self.scheme = "https"
@@ -149,11 +151,11 @@ class ENCODED:
     def add_jsonld_context(self, tree, default_base):
         """Add contexts to various objects in the tree.
 
-        tree is a json tree returned from the DCC's encoded database.
-        contexts is a dictionary of dictionaries containing contexts
-                for the various  possible encoded classes.
-        base, if supplied allows setting the base url that relative
-            urls will be resolved against.
+        :param tree: is a json tree returned from the DCC's encoded database.
+        :param contexts: is a dictionary of dictionaries containing contexts
+                         for the various  possible encoded classes.
+        :param base: if supplied allows setting the base url that relative
+                     urls will be resolved against.
         """
         self.add_jsonld_child_context(tree, default_base)
         self.add_jsonld_namespaces(tree["@context"])
@@ -400,21 +402,18 @@ class ENCODED:
         and in some cases also include some additional type information.
         (see TypedColumnParser)
 
-        Arguments:
-           collection (str): name of collection to create new objects in
-           sheet (pandas.DataFrame): DataFrame with objects to create,
-               assuming the appropriate accession number is empty.
-               additional the accession number and uuid is updated if the object
-               is created.
-           dry_run (bool): whether or not to skip the code to post the objects
-           verbose (bool): print the http responses.
+        :param collection: (str) name of collection to create new objects in
+        :param sheet: (pandas.DataFrame) DataFrame with objects to create,
+                      assuming the appropriate accession number is empty.
+                      additional the accession number and uuid is updated if
+                      the object is created.
+        :param dry_run: (bool) whether or not to skip the code to post the objects
+        :param verbose: (bool) print the http responses.
 
-        Returns:
-           list of created objects.
+        :returns: list of created objects.
 
-        Raises:
-           jsonschema.ValidationError if the object doesn't validate against
-              the encoded jsonschema.
+        :raises: jsonschema.ValidationError if the object doesn't validate against
+                 the encoded jsonschema.
         """
         accession_name = self.get_accession_name(collection)
 
