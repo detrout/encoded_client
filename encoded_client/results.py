@@ -1,6 +1,6 @@
 """Help collect and process results for submission
 """
-from collections import MutableMapping
+from collections.abc import MutableMapping
 import os
 import shutil
 import logging

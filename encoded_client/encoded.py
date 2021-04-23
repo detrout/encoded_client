@@ -5,7 +5,7 @@ This allows retrieving blocks
 from __future__ import print_function
 import pandas
 import base64
-import collections
+from collections.abc import Sequence, Iterable, Mapping
 import hashlib
 import logging
 import json
@@ -171,13 +171,13 @@ class ENCODED:
             return
 
         # recurse on container types
-        if isinstance(obj, collections.Sequence):
+        if isinstance(obj, Sequence):
             # how should I update lists?
             for v in obj:
                 self.add_jsonld_child_context(v, default_base)
             return
 
-        if isinstance(obj, collections.Mapping):
+        if isinstance(obj, Mapping):
             for v in obj.values():
                 self.add_jsonld_child_context(v, default_base)
 
@@ -254,7 +254,7 @@ class ENCODED:
             raise ValueError("None type")
         if isinstance(obj_type, six.string_types):
             raise ValueError("@type should be a list, not a string")
-        if not isinstance(obj_type, collections.Sequence):
+        if not isinstance(obj_type, Sequence):
             raise ValueError("@type is not a sequence")
         return obj_type[0]
 
@@ -346,7 +346,7 @@ class ENCODED:
         Some of the nested dictionaries lack the @id or @type
         information necessary to convert them.
         """
-        if not isinstance(obj, collections.Iterable):
+        if not isinstance(obj, Iterable):
             return False
 
         if "@id" in obj and "@type" in obj:
