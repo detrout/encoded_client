@@ -468,14 +468,17 @@ class ENCODED:
                         continue
                     new_object[name] = value
 
-            try:
-                validator.validate(new_object, collection)
-            except jsonschema.ValidationError as e:
-                LOGGER.error("Validation error row %s", i)
-                raise e
+            if len(new_object) > 0:
+                try:
+                    validator.validate(new_object, collection)
+                except jsonschema.ValidationError as e:
+                    LOGGER.error("Validation error row %s", i)
+                    raise e
 
-            if new_object and new_object.get(accession_name) is None:
-                to_create.append((i, new_object))
+                if new_object.get(accession_name) is None:
+                    to_create.append((i, new_object))
+                else:
+                    to_create.append((i, None))
             else:
                 to_create.append((i, None))
 
