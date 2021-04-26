@@ -3,6 +3,7 @@
 This allows retrieving blocks
 """
 from __future__ import print_function
+from datetime import datetime
 import pandas
 import base64
 from collections.abc import Sequence, Iterable, Mapping
@@ -857,6 +858,8 @@ class TypedColumnParser(object):
     def parse_sheet_timestamp_type(value):
         """Helper function to parse :date columns in sheet"""
         if isinstance(value, str):
+            parsed = datetime.strptime(value, '%m/%d/%Y').strftime('%Y-%m-%d')
+            LOGGER.warning("Interpreting {} as {}".format(value, parsed))
             return value
         return value.strftime("%Y-%m-%d")
 
