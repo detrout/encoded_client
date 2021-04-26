@@ -6,8 +6,8 @@ data to the ENCODE DCC. I would only expect the most current ENCODE 4
 submission tools to be useful, though some of the code for the earlier
 versions of the project are still present.
 
-I believe there is another ecoded client, but I believe this version
-is the only to attept to use the DCC's provided jsonschema to validate
+I believe there is another encoded client, but I believe this version
+is the only to attempt to use the DCC's provided jsonschema to validate
 objects before attempting to post them.
 
 The rough workflow I've been following is to generate a metadata
