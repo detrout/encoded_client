@@ -12,6 +12,7 @@ from ..encoded import (
     ENCODED_CONTEXT,
     ENCODED_NAMESPACES,
     DCCValidator,
+    DuplicateAliasError,
     typed_column_parser,
 )
 
@@ -203,6 +204,35 @@ class TestEncoded(TestCase):
 
         self.validator.validate(donor, "biosample")
         self.validator.validate(part, "biosample")
+
+    def test_alias_collision(self):
+        # Make sure an alias can only be defined once
+        donor = {
+            "aliases": ["barbara-wold:c1_e12.5_mouse_limb_donor"],
+            "award": "U54HG006998",
+            "biosample_term_id": "UBERON:0002101",
+            "biosample_term_name": "limb",
+            "biosample_type": "tissue",
+            "date_obtained": "2017-02-01",
+            "description": "C57Bl6 wild-type embryonic mouse",
+            "donor": "/mouse-donors/ENCDO956IXV/",
+            "lab": "/labs/barbara-wold",
+            "model_organism_age": "12.5",
+            "model_organism_age_units": "day",
+            "mouse_life_stage": "embryonic",
+            "organism": "3413218c-3d86-498b-a0a2-9a406638e786",
+            "source": "/sources/gems-caltech/",
+            "starting_amount": 1,
+            "starting_amount_units": "items",
+        }
+        part = donor.copy()
+        part["description"] = "C57Bl6 wild-type embryonic mouse collision"
+
+        self.validator.validate(donor, "biosample")
+        self.assertRaises(
+            DuplicateAliasError, self.validator.validate, part, "biosample"
+        )
+
 
     def test_create_context(self):
         linked_id = {"@type": "@id"}

@@ -116,6 +116,10 @@ COLLECTION_TO_TYPE = {
 TYPE_TO_COLLECTION = {COLLECTION_TO_TYPE[k]: k for k in COLLECTION_TO_TYPE}
 
 
+class DuplicateAliasError(jsonschema.ValidationError):
+    pass
+
+
 class ENCODED:
     """Programatic object orientated access to encoded
 
@@ -696,6 +700,8 @@ class DCCValidator:
         """
         # store aliases
         for a in obj.get("aliases", []):
+            if a in self._aliases:
+                raise DuplicateAliasError("{} was already registered")
             self._aliases[a] = obj
 
     def create_dcc_validator(self, schema):
