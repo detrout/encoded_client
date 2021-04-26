@@ -649,8 +649,8 @@ class DCCValidator:
 
         hidden = self.strip_jsonld_attributes(obj)
         hidden = self.strip_uuid(obj)
-        self.update_aliases(obj)
         self[object_type].validate(hidden)
+        self.update_aliases(obj)
 
         # Additional validation rules passed down from the DCC for our grant
         assay_term_name = hidden.get("assay_term_name")
