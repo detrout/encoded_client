@@ -858,9 +858,16 @@ class TypedColumnParser(object):
     def parse_sheet_timestamp_type(value):
         """Helper function to parse :date columns in sheet"""
         if isinstance(value, str):
-            parsed = datetime.strptime(value, '%m/%d/%Y').strftime('%Y-%m-%d')
+            if '/' in value:
+                parsed = datetime.strptime(value, '%m/%d/%Y')
+            elif '-' in value:
+                parsed = datetime.strptime(value, '%Y-%m-%d')
+            else:
+                raise ValueError("Unrecognized date format {}".format(value))
+
             LOGGER.warning("Interpreting {} as {}".format(value, parsed))
-            return value
+            value = parsed
+
         return value.strftime("%Y-%m-%d")
 
     @staticmethod

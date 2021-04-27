@@ -407,11 +407,17 @@ class TestTypedColumnParser(TestCase):
     def test_timestamp(self):
         name, value = typed_column_parser("foo:date", "1999-1-1")
         self.assertEqual(name, "foo")
-        self.assertEqual(value, "1999-1-1")
+        self.assertEqual(value, "1999-01-01")
+
+        name, value = typed_column_parser("foo:date", "1/1/1999")
+        self.assertEqual(name, "foo")
+        self.assertEqual(value, "1999-01-01")
 
         name, value = typed_column_parser("foo:date", datetime.date(1999, 1, 1))
         self.assertEqual(name, "foo")
         self.assertEqual(value, "1999-01-01")
+
+        self.assertRaises(ValueError, typed_column_parser, "foo:date", "asdf")
 
     def test_json(self):
         name, value = typed_column_parser("foo:json", '{"a": 3}')
