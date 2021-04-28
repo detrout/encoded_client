@@ -234,6 +234,13 @@ class ENCODED:
                 context.update(self.contexts[t])
         return context
 
+    def get_experiment(self, obj_id):
+        obj = self.get_json(obj_id)
+        if obj['@type'][0] != "Experiment":
+            raise ValueError("Object is not an experiment")
+
+        return EncodeExperiment(obj)
+
     def get_json(self, obj_id, **kwargs):
         """GET an ENCODE object as JSON and return as dict
 
@@ -1001,6 +1008,261 @@ class Document(object):
             return self.post(server, validator)
         else:
             return server.get_json(uuid, embed=False)
+
+
+class EncodeExperiment:
+    """Helper class for accessing ENCODED experiment objects
+    """
+    def __init__(self, json=None):
+        self._json = json
+        self._schema_version_check()
+        self._replicate_file_map = {}
+        if self._json is not None:
+            self._calculate_derived_from()
+
+    def _schema_version_check(self):
+        if self.schema_version != "33":
+            LOGGER.warning("New schema version {}".format(self.schema_version))
+
+    def _calculate_derived_from(self):
+        def find_source_replicate(derived_map, current_file, replicate_map):
+            if current_file in replicate_map:
+                return replicate_map[current_file]
+            return find_source_replicate(derived_map, derived_map[current_file], replicate_map)
+
+        file_replicate_map = {}
+        our_files = set((f['@id'] for f in self._json['files']))
+        for f in self._json['files']:
+            if 'replicate' in f:
+                file_replicate_map[f['@id']] = f['replicate']['@id']
+
+        derived_map = {}
+        for f in self._json['files']:
+            for derived_from in f.get('derived_from', []):
+                if derived_from in our_files:
+                    derived_map[f['@id']] = derived_from
+
+        for derived_file in derived_map:
+            file_replicate_map[derived_file] = find_source_replicate(
+                derived_map,
+                derived_file,
+                file_replicate_map)
+
+        self._replicate_file_map = {}
+        for file_id in file_replicate_map:
+            self._replicate_file_map.setdefault(file_replicate_map[file_id], []).append(file_id)
+
+        return self._replicate_file_map
+
+    @property
+    def replicates(self):
+        if self._json is None:
+            return
+
+        for replicate in self._json["replicates"]:
+            yield EncodeReplicate(replicate, self)
+
+    def __getattr__(self, key):
+        if self._json is None:
+            LOGGER.warn("Uninitialized Experiment object")
+            return
+        return self._json[key]
+
+    def __getitem__(self, key):
+        if key in ["replicates"]:
+            return getattr(self, key)
+        return self._json.get(key)
+
+
+class EncodeReplicate:
+    def __init__(self, replicate, experiment):
+        self._experiment = experiment
+        obj_type = get_object_type(replicate)
+        if obj_type != "Replicate":
+            raise ValueError("Not a replicate type: {}".format(obj_type))
+        self._json = replicate
+
+    @property
+    def files(self):
+        file_ids = self._experiment._replicate_file_map[self._json["@id"]]
+        for f in self._experiment["files"]:
+            if f["@id"] in file_ids:
+                yield EncodeFile(f, self)
+
+    def __getattr__(self, key):
+        return self._json.get(key)
+
+    def __getitem__(self, key):
+        if key in ["files"]:
+            return getattr(self, key)
+
+        return self._json.get(key)
+
+
+class EncodeFile:
+    def __init__(self, json, replicate):
+        self._json = json
+        self._replicate = replicate
+
+    @property
+    def quality_metrics(self):
+        if "quality_metrics" not in self._json:
+            return []
+
+        for metric in self._json["quality_metrics"]:
+            metric_type = get_object_type(metric)
+            parser = QUALITY_METRIC_PARSERS[metric_type]
+            value = parser(metric)
+            yield value
+
+    def __getattr__(self, key):
+        return self._json.get(key)
+
+    def __getitem__(self, key):
+        if key in ["quality_metrics"]:
+            return getattr(self, key)
+
+        return self._json.get(key)
+
+
+def parse_pct(value):
+    assert value.endswith('%'), 'Expected % at end of {}'.format(value)
+    return float(value[:-1])
+
+
+def parse_samtools_stats(record):
+    """Parse SamtoolsFlagstatsQualityMetric file
+    """
+    columns = {
+        '@id': str,
+        '@type': lambda x: x[0],
+        'quality_metric_of': list,
+        'duplicates': int,
+        'duplicates_qc_failed': int,
+        'mapped': int,
+        'mapped_pct': parse_pct,
+        'mapped_qc_failed': int,
+        'total': int,
+        'total_qc_failed': int,
+    }
+    results = {}
+    for name, converter in columns.items():
+        results[name] = converter(record[name])
+    return results
+
+
+def parse_star_stats(record):
+    """Pase StarQualityMetric results"""
+    columns = {
+        '@id': str,
+        '@type': lambda x: x[0],
+        'quality_metric_of': list,
+        '% of chimeric reads': parse_pct,
+        '% of reads mapped to multiple loci': parse_pct,
+        '% of reads mapped to too many loci': parse_pct,
+        '% of reads unmapped: other': parse_pct,
+        '% of reads unmapped: too many mismatches': parse_pct,
+        '% of reads unmapped: too short': parse_pct,
+        'Average input read length': float,
+        'Average mapped length': float,
+        'Deletion average length': float,
+        'Deletion rate per base': parse_pct,
+        'Insertion average length': float,
+        'Insertion rate per base': parse_pct,
+        'Mapping speed, Million of reads per hour': float,
+        'Mismatch rate per base, %': parse_pct,
+        'Number of chimeric reads': int,
+        'Number of input reads': int,
+        'Number of reads mapped to multiple loci': int,
+        'Number of reads mapped to too many loci': int,
+        'Number of splices: AT/AC': int,
+        'Number of splices: Annotated (sjdb)': int,
+        'Number of splices: GC/AG': int,
+        'Number of splices: GT/AG': int,
+        'Number of splices: Non-canonical': int,
+        'Number of splices: Total': int,
+        'Uniquely mapped reads %': parse_pct,
+        'Uniquely mapped reads number': int,
+    }
+    results = {}
+    for name, converter in columns.items():
+        if name in record:
+            results[name] = converter(record[name])
+
+    return results
+
+
+def parse_gene_type_quantification(record):
+    """Parse GeneTypeQuantificationQualityMetric results"""
+    columns = {
+        '@id': str,
+        '@type': lambda x: x[0],
+        'quality_metric_of': list,
+        'Mt_rRNA': int,
+        'antisense': int,
+        'miRNA': int,
+        'processed_transcript': int,
+        'protein_coding': int,
+        'rRNA': int,
+        'ribozyme': int,
+        'sRNA': int,
+        'scaRNA': int,
+        'sense_intronic': int,
+        'sense_overlapping': int,
+        'snRNA': int,
+        'snoRNA': int,
+        'spikein': int
+    }
+    results = {}
+    for name, converter in columns.items():
+        results[name] = converter(record[name])
+
+    return results
+
+
+def parse_mad_metric(record):
+    """Parse MadQualityMetric results"""
+    def get_href(record):
+        return record['href']
+
+    columns = {
+        '@id': str,
+        '@type': lambda x: x[0],
+        'quality_metric_of': list,
+        'attachment': get_href,
+        'SD of log ratios': float,
+        'Pearson correlation': float,
+        'Spearman correlation': float,
+        'MAD of log ratios': float,
+    }
+    results = {}
+    for name, converter in columns.items():
+        results[name] = converter(record[name])
+    return results
+
+
+def parse_genes_detected(record):
+    """Parse GeneQuantificationQualityMetric results"""
+    columns = {
+        '@id': str,
+        '@type': lambda x: x[0],
+        'quality_metric_of': list,
+        'number_of_genes_detected': int,
+    }
+    results = {}
+    for name, converter in columns.items():
+        results[name] = converter(record[name])
+
+    return results
+
+
+QUALITY_METRIC_PARSERS = {
+    'SamtoolsFlagstatsQualityMetric': parse_samtools_stats,
+    'StarQualityMetric': parse_star_stats,
+    'GeneTypeQuantificationQualityMetric': parse_gene_type_quantification,
+    'MadQualityMetric': parse_mad_metric,
+    'GeneQuantificationQualityMetric': parse_genes_detected,
+}
 
 
 if __name__ == "__main__":

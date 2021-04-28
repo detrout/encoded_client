@@ -428,6 +428,62 @@ class TestTypedColumnParser(TestCase):
         self.assertEqual(value, [{"a": 3}])
 
 
+# should have a guard for "requires network access".
+class TestEncodeExperiment(TestCase):
+    def test_experiment(self):
+        server = ENCODED("www.encodeproject.org")
+
+        e = server.get_experiment("/experiments/ENCSR000AEH/")
+        self.assertIsNot(e._json, None)
+        self.assertEqual(e.assay_term_name, "polyA plus RNA-seq")
+        self.assertEqual(e.description, "RNA Evaluation Gm12878 Long Poly-A+ RNA-seq from Wold")
+
+        replicates = list(e.replicates)
+        self.assertEqual(len(replicates), 2)
+
+        replicate_files = {}
+        file_formats_expected = set(["tsv", "fastq", "bam", "bigWig"])
+        output_types_expected = set([
+            'reads',
+            'signal of all reads',
+            'signal of unique reads',
+            'transcriptome alignments',
+            'transcript quantifications',
+            'gene quantifications',
+            'alignments',
+            'signal',
+        ])
+        library_aliases_expected = set(["barbara-wold:13713", "barbara-wold:13714"])
+        library_aliases_seen = set()
+        for i, r in enumerate(replicates):
+            for alias in r["library"]["aliases"]:
+                library_aliases_seen.add(alias)
+            files = list(r.files)
+            replicate_files[i] = [f["@id"] for f in files]
+            self.assertGreaterEqual(len(files), 24)
+            file_formats_seen = set()
+            output_types_seen = set()
+            qc_seen = []
+            qc_types_seen = set()
+            for f in files:
+                file_formats_seen.add(f["file_format"])
+                output_types_seen.add(f["output_type"])
+                for qc in f.quality_metrics:
+                    qc_seen.append(qc)
+                    qc_types_seen.add(qc_seen["@type"])
+
+            self.assertGreaterEqual(len(qc_seen), 4)
+            print(qc_types_seen)
+
+        self.assertEqual(library_aliases_seen, library_aliases_expected)
+        self.assertEqual(file_formats_expected, file_formats_seen)
+        self.assertEqual(output_types_expected, output_types_seen)
+
+        self.assertEqual(
+            len(set(replicate_files[0]).intersection(replicate_files[1])),
+            0)
+
+
 if __name__ == "__main__":
     from unittest import main
 
