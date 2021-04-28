@@ -121,6 +121,18 @@ class DuplicateAliasError(jsonschema.ValidationError):
     pass
 
 
+def get_object_type(obj):
+    """Return type for a encoded object"""
+    obj_type = obj.get("@type")
+    if not obj_type:
+        raise ValueError("None type")
+    if isinstance(obj_type, six.string_types):
+        raise ValueError("@type should be a list, not a string")
+    if not isinstance(obj_type, Sequence):
+        raise ValueError("@type is not a sequence")
+    return obj_type[0]
+
+
 class ENCODED:
     """Programatic object orientated access to encoded
 
@@ -210,7 +222,7 @@ class ENCODED:
         self.contexts[None] = default context attributes added to any type
         self.contexts[type] = context attributes for this type.
         """
-        obj_type = self.get_object_type(obj)
+        obj_type = get_object_type(obj)
         context = {
             "@base": urljoin(default_base, obj["@id"]),
             "@vocab": self.get_schema_url(obj_type),
@@ -251,17 +263,6 @@ class ENCODED:
         json = self.get_json(obj_id, **kwargs)
         self.add_jsonld_context(json, url)
         return json
-
-    def get_object_type(self, obj):
-        """Return type for a encoded object"""
-        obj_type = obj.get("@type")
-        if not obj_type:
-            raise ValueError("None type")
-        if isinstance(obj_type, six.string_types):
-            raise ValueError("@type should be a list, not a string")
-        if not isinstance(obj_type, Sequence):
-            raise ValueError("@type is not a sequence")
-        return obj_type[0]
 
     def get_response(self, fragment, **kwargs):
         """GET an ENCODED url and return the requests request

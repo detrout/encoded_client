@@ -13,6 +13,7 @@ from ..encoded import (
     ENCODED_NAMESPACES,
     DCCValidator,
     DuplicateAliasError,
+    get_object_type,
     typed_column_parser,
 )
 
@@ -275,7 +276,7 @@ class TestEncoded(TestCase):
         bio_base = self.encode.prepare_url(obj["biosample"]["@id"])
 
         url = self.encode.prepare_url("/libraries/ENCLB044ZZZ/?format=json&embed=False")
-        obj_type = self.encode.get_object_type(obj)
+        obj_type = get_object_type(obj)
         schema_url = self.encode.get_schema_url(obj_type)
         self.encode.add_jsonld_context(obj, url)
 
