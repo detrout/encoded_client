@@ -4,3 +4,4 @@ __pycache__/
 .coverage
 .tox/
 *.egg-info/
+docs/_build/
