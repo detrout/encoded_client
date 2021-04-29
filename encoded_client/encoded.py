@@ -1131,14 +1131,20 @@ def parse_pct(value):
     return float(value)
 
 
+def parse_metric(record, column_parser):
+    results = {}
+    for name, value in record.items():
+        if name in column_parser:
+            value = column_parser[name](value)
+        results[name] = value
+
+    return results
 
 
 def parse_samtools_stats(record):
     """Parse SamtoolsFlagstatsQualityMetric file
     """
     columns = {
-        '@id': str,
-        '@type': lambda x: x[0],
         'quality_metric_of': list,
         'duplicates': int,
         'duplicates_qc_failed': int,
@@ -1148,18 +1154,12 @@ def parse_samtools_stats(record):
         'total': int,
         'total_qc_failed': int,
     }
-    results = {}
-    for name, converter in columns.items():
-        results[name] = converter(record[name])
-    return results
+    return parse_metric(record, columns)
 
 
 def parse_star_stats(record):
     """Pase StarQualityMetric results"""
     columns = {
-        '@id': str,
-        '@type': lambda x: x[0],
-        'quality_metric_of': list,
         '% of chimeric reads': parse_pct,
         '% of reads mapped to multiple loci': parse_pct,
         '% of reads mapped to too many loci': parse_pct,
@@ -1187,20 +1187,12 @@ def parse_star_stats(record):
         'Uniquely mapped reads %': parse_pct,
         'Uniquely mapped reads number': int,
     }
-    results = {}
-    for name, converter in columns.items():
-        if name in record:
-            results[name] = converter(record[name])
-
-    return results
+    return parse_metric(record, columns)
 
 
 def parse_gene_type_quantification(record):
     """Parse GeneTypeQuantificationQualityMetric results"""
     columns = {
-        '@id': str,
-        '@type': lambda x: x[0],
-        'quality_metric_of': list,
         'Mt_rRNA': int,
         'antisense': int,
         'miRNA': int,
@@ -1216,11 +1208,7 @@ def parse_gene_type_quantification(record):
         'snoRNA': int,
         'spikein': int
     }
-    results = {}
-    for name, converter in columns.items():
-        results[name] = converter(record[name])
-
-    return results
+    return parse_metric(record, columns)
 
 
 def parse_mad_metric(record):
@@ -1229,34 +1217,22 @@ def parse_mad_metric(record):
         return record['href']
 
     columns = {
-        '@id': str,
-        '@type': lambda x: x[0],
-        'quality_metric_of': list,
         'attachment': get_href,
         'SD of log ratios': float,
         'Pearson correlation': float,
         'Spearman correlation': float,
         'MAD of log ratios': float,
     }
-    results = {}
-    for name, converter in columns.items():
-        results[name] = converter(record[name])
-    return results
+    return parse_metric(record, columns)
 
 
 def parse_genes_detected(record):
     """Parse GeneQuantificationQualityMetric results"""
     columns = {
-        '@id': str,
-        '@type': lambda x: x[0],
         'quality_metric_of': list,
         'number_of_genes_detected': int,
     }
-    results = {}
-    for name, converter in columns.items():
-        results[name] = converter(record[name])
-
-    return results
+    return parse_metric(record, columns)
 
 
 QUALITY_METRIC_PARSERS = {
