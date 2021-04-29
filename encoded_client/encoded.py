@@ -1126,8 +1126,11 @@ class EncodeFile:
 
 
 def parse_pct(value):
-    assert value.endswith('%'), 'Expected % at end of {}'.format(value)
-    return float(value[:-1])
+    if value.endswith("%"):
+        value = value[:-1]
+    return float(value)
+
+
 
 
 def parse_samtools_stats(record):
