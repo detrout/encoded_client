@@ -850,7 +850,10 @@ class TypedColumnParser(object):
     @staticmethod
     def parse_sheet_array_type(value):
         """Helper function to parse :array columns in sheet"""
-        return re.split(r",\s*", value)
+        if pandas.isnull(value):
+            return []
+        else:
+            return re.split(r",\s*", value)
 
     @staticmethod
     def parse_sheet_integer_type(value):
