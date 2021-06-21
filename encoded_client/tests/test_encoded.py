@@ -470,7 +470,7 @@ class TestEncodeExperiment(TestCase):
                 output_types_seen.add(f["output_type"])
                 for qc in f.quality_metrics:
                     qc_seen.append(qc)
-                    qc_types_seen.add(qc_seen["@type"])
+                    qc_types_seen.add(get_object_type(qc_seen[-1]))
 
             self.assertGreaterEqual(len(qc_seen), 4)
             print(qc_types_seen)

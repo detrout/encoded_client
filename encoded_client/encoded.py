@@ -670,12 +670,12 @@ class DCCValidator:
         Raises:
             ValidationError: if the object does not conform to the schema.
         """
-        object_type = object_type if object_type else self.server.get_object_type(obj)
+        object_type = object_type if object_type else get_object_type(obj)
 
         hidden = self.strip_jsonld_attributes(obj)
-        hidden = self.strip_uuid(obj)
+        hidden = self.strip_uuid(hidden)
         self[object_type].validate(hidden)
-        self.update_aliases(obj)
+        self.update_aliases(hidden)
 
         # Additional validation rules passed down from the DCC for our grant
         assay_term_name = hidden.get("assay_term_name")
