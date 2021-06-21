@@ -30,12 +30,12 @@ def make_md5sum_unix(filename, md5_cache):
     if retcode != 0:
         logger.error("Trouble with md5sum for {0}".format(filename))
         return None
-    lines = stdin.splitlines()
+    lines = [x.decode('utf-8') for x in stdin.splitlines()]
     md5sum = parse_md5sum_line(lines, filename)
     if md5sum is not None:
         logger.debug("Caching sum in {0}".format(md5_cache))
         stream = open(md5_cache, "wt")
-        stream.write(stdin)
+        stream.write(stdin.decode('utf-8'))
         stream.close()
     return md5sum
 
