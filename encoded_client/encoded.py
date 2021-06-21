@@ -472,6 +472,9 @@ class ENCODED:
         if validator is None:
             validator = DCCValidator(self)
 
+        # delete any aliases for this sheet.
+        self.remove_sheet_aliases(validator, sheet)
+
         for i, row in sheet.iterrows():
             new_object = {}
             for name, value in row.items():
@@ -546,6 +549,15 @@ class ENCODED:
             url["netloc"] = self.server
         url = urlunparse(url.values())
         return url
+
+    def remove_sheet_aliases(self, validator, sheet):
+        field_name = 'aliases:array'
+        if field_name in sheet.columns:
+            for field in sheet[field_name]:
+                name, aliases = typed_column_parser(field_name, field)
+                for alias in aliases:
+                    if alias in validator._aliases:
+                        del validator._aliases[alias]
 
     def search_jsonld(self, **kwargs):
         """Send search request to ENCODED
