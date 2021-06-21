@@ -722,7 +722,7 @@ class DCCValidator:
         # store aliases
         for a in obj.get("aliases", []):
             if a in self._aliases:
-                raise DuplicateAliasError("{} was already registered")
+                raise DuplicateAliasError("{} was already used else where".format(a))
             self._aliases[a] = obj
 
     def create_dcc_validator(self, schema):
