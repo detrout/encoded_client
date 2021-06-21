@@ -234,7 +234,6 @@ class TestEncoded(TestCase):
             DuplicateAliasError, self.validator.validate, part, "biosample"
         )
 
-
     def test_create_context(self):
         linked_id = {"@type": "@id"}
         library = {"@id": "/libraries/1234", "@type": ["Library", "Item"]}
