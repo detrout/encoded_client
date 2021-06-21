@@ -239,7 +239,7 @@ class ENCODED:
         if obj['@type'][0] != "Experiment":
             raise ValueError("Object is not an experiment")
 
-        return EncodeExperiment(obj)
+        return EncodeExperiment(self, obj)
 
     def get_json(self, obj_id, **kwargs):
         """GET an ENCODE object as JSON and return as dict
@@ -1010,19 +1010,24 @@ class Document(object):
             return server.get_json(uuid, embed=False)
 
 
-class EncodeExperiment:
+class EncodeExperiment(Mapping):
     """Helper class for accessing ENCODED experiment objects
     """
-    def __init__(self, json=None):
+    def __init__(self, server, json=None):
+        self._server = server
         self._json = json
+        self._replicates = []
         self._schema_version_check()
         self._replicate_file_map = {}
         if self._json is not None:
             self._calculate_derived_from()
 
     def _schema_version_check(self):
-        if self.schema_version != "33":
-            LOGGER.warning("New schema version {}".format(self.schema_version))
+        supported_versions = {"33", "34"}
+        if self.schema_version not in supported_versions:
+            LOGGER.warning(
+                "New schema version {} may not be supported".format(
+                    self.schema_version))
 
     def _calculate_derived_from(self):
         def find_source_replicate(derived_map, current_file, replicate_map):
@@ -1059,50 +1064,94 @@ class EncodeExperiment:
         if self._json is None:
             return
 
-        for replicate in self._json["replicates"]:
-            yield EncodeReplicate(replicate, self)
+        if len(self._replicates) != len(self._json["replicates"]):
+            for replicate in self._json["replicates"]:
+                self._replicates.append(EncodeReplicate(replicate, self))
+
+        return self._replicates
 
     def __getattr__(self, key):
         if self._json is None:
             LOGGER.warn("Uninitialized Experiment object")
             return
-        return self._json[key]
+        else:
+            return self._json[key]
 
     def __getitem__(self, key):
-        if key in ["replicates"]:
-            return getattr(self, key)
+        if key == "replicates":
+            return self.replicates()
         return self._json.get(key)
 
+    def __iter__(self):
+        for key in self._json:
+            yield key
 
-class EncodeReplicate:
+    def __len__(self):
+        return len(self._json)
+
+    def __repr__(self):
+        return "<EncodeExperiment: {}>".format(self._json["@id"])
+
+
+class EncodeReplicate(Mapping):
     def __init__(self, replicate, experiment):
         self._experiment = experiment
         obj_type = get_object_type(replicate)
         if obj_type != "Replicate":
             raise ValueError("Not a replicate type: {}".format(obj_type))
         self._json = replicate
+        self._files = []
 
     @property
     def files(self):
+        if self._json["@id"] not in self._experiment._replicate_file_map:
+            return
+
         file_ids = self._experiment._replicate_file_map[self._json["@id"]]
-        for f in self._experiment["files"]:
-            if f["@id"] in file_ids:
-                yield EncodeFile(f, self)
+        if len(self._files) != len(file_ids):
+            for f in self._experiment["files"]:
+                if f["@id"] in file_ids:
+                    self._files.append(EncodeFile(f, self))
+
+        return self._files
 
     def __getattr__(self, key):
         return self._json.get(key)
 
     def __getitem__(self, key):
-        if key in ["files"]:
-            return getattr(self, key)
+        if key == "files":
+            return self.files
+        else:
+            return self._json.get(key)
 
-        return self._json.get(key)
+    def __iter__(self):
+        for key in self._json:
+            yield key
+        # also report our extra attributes
+        for key in ["files"]:
+            yield key
+
+    def __len__(self):
+        return len(self._json)
+
+    def __repr__(self):
+        return "<EncodeReplicate: {}>".format(self._json["@id"])
 
 
-class EncodeFile:
+class EncodeFile(Mapping):
     def __init__(self, json, replicate):
         self._json = json
         self._replicate = replicate
+        self._response = None
+
+    @property
+    def content(self):
+        if self._response is None:
+            server = self._replicate._experiment._server
+            url = server.prepare_url(self.href)
+            self._response = requests.get(url)
+
+        return self._requests.content
 
     @property
     def quality_metrics(self):
@@ -1119,10 +1168,20 @@ class EncodeFile:
         return self._json.get(key)
 
     def __getitem__(self, key):
-        if key in ["quality_metrics"]:
-            return getattr(self, key)
+        if key == "quality_metrics":
+            return self.quality_metrics
+        else:
+            return self._json.get(key)
 
-        return self._json.get(key)
+    def __iter__(self):
+        for key in self._json:
+            yield key
+
+    def __len__(self):
+        return len(self._json)
+
+    def __repr__(self):
+        return "<EncodeFile: {} {}>".format(self._json["@id"], self._json["output_type"])
 
 
 def parse_pct(value):
