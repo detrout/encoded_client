@@ -236,7 +236,7 @@ class ENCODED:
 
     def get_experiment(self, obj_id):
         obj = self.get_json(obj_id)
-        if obj['@type'][0] != "Experiment":
+        if obj["@type"][0] != "Experiment":
             raise ValueError("Object is not an experiment")
 
         return EncodeExperiment(self, obj)
@@ -554,7 +554,7 @@ class ENCODED:
         return url
 
     def remove_sheet_aliases(self, validator, sheet):
-        field_name = 'aliases:array'
+        field_name = "aliases:array"
         if field_name in sheet.columns:
             for field in sheet[field_name]:
                 name, aliases = typed_column_parser(field_name, field)
@@ -884,10 +884,10 @@ class TypedColumnParser(object):
     def parse_sheet_timestamp_type(value):
         """Helper function to parse :date columns in sheet"""
         if isinstance(value, str):
-            if '/' in value:
-                parsed = datetime.strptime(value, '%m/%d/%Y')
-            elif '-' in value:
-                parsed = datetime.strptime(value, '%Y-%m-%d')
+            if "/" in value:
+                parsed = datetime.strptime(value, "%m/%d/%Y")
+            elif "-" in value:
+                parsed = datetime.strptime(value, "%Y-%m-%d")
             else:
                 raise ValueError("Unrecognized date format {}".format(value))
 
@@ -1054,16 +1054,16 @@ class EncodeExperiment(Mapping):
             return find_source_replicate(derived_map, derived_map[current_file], replicate_map)
 
         file_replicate_map = {}
-        our_files = set((f['@id'] for f in self._json['files']))
-        for f in self._json['files']:
-            if 'replicate' in f:
-                file_replicate_map[f['@id']] = f['replicate']['@id']
+        our_files = set((f["@id"] for f in self._json["files"]))
+        for f in self._json["files"]:
+            if "replicate" in f:
+                file_replicate_map[f["@id"]] = f["replicate"]["@id"]
 
         derived_map = {}
-        for f in self._json['files']:
-            for derived_from in f.get('derived_from', []):
+        for f in self._json["files"]:
+            for derived_from in f.get("derived_from", []):
                 if derived_from in our_files:
-                    derived_map[f['@id']] = derived_from
+                    derived_map[f["@id"]] = derived_from
 
         for derived_file in derived_map:
             file_replicate_map[derived_file] = find_source_replicate(
@@ -1222,14 +1222,14 @@ def parse_samtools_stats(record):
     """Parse SamtoolsFlagstatsQualityMetric file
     """
     columns = {
-        'quality_metric_of': list,
-        'duplicates': int,
-        'duplicates_qc_failed': int,
-        'mapped': int,
-        'mapped_pct': parse_pct,
-        'mapped_qc_failed': int,
-        'total': int,
-        'total_qc_failed': int,
+        "quality_metric_of": list,
+        "duplicates": int,
+        "duplicates_qc_failed": int,
+        "mapped": int,
+        "mapped_pct": parse_pct,
+        "mapped_qc_failed": int,
+        "total": int,
+        "total_qc_failed": int,
     }
     return parse_metric(record, columns)
 
@@ -1237,32 +1237,32 @@ def parse_samtools_stats(record):
 def parse_star_stats(record):
     """Pase StarQualityMetric results"""
     columns = {
-        '% of chimeric reads': parse_pct,
-        '% of reads mapped to multiple loci': parse_pct,
-        '% of reads mapped to too many loci': parse_pct,
-        '% of reads unmapped: other': parse_pct,
-        '% of reads unmapped: too many mismatches': parse_pct,
-        '% of reads unmapped: too short': parse_pct,
-        'Average input read length': float,
-        'Average mapped length': float,
-        'Deletion average length': float,
-        'Deletion rate per base': parse_pct,
-        'Insertion average length': float,
-        'Insertion rate per base': parse_pct,
-        'Mapping speed, Million of reads per hour': float,
-        'Mismatch rate per base, %': parse_pct,
-        'Number of chimeric reads': int,
-        'Number of input reads': int,
-        'Number of reads mapped to multiple loci': int,
-        'Number of reads mapped to too many loci': int,
-        'Number of splices: AT/AC': int,
-        'Number of splices: Annotated (sjdb)': int,
-        'Number of splices: GC/AG': int,
-        'Number of splices: GT/AG': int,
-        'Number of splices: Non-canonical': int,
-        'Number of splices: Total': int,
-        'Uniquely mapped reads %': parse_pct,
-        'Uniquely mapped reads number': int,
+        "% of chimeric reads": parse_pct,
+        "% of reads mapped to multiple loci": parse_pct,
+        "% of reads mapped to too many loci": parse_pct,
+        "% of reads unmapped: other": parse_pct,
+        "% of reads unmapped: too many mismatches": parse_pct,
+        "% of reads unmapped: too short": parse_pct,
+        "Average input read length": float,
+        "Average mapped length": float,
+        "Deletion average length": float,
+        "Deletion rate per base": parse_pct,
+        "Insertion average length": float,
+        "Insertion rate per base": parse_pct,
+        "Mapping speed, Million of reads per hour": float,
+        "Mismatch rate per base, %": parse_pct,
+        "Number of chimeric reads": int,
+        "Number of input reads": int,
+        "Number of reads mapped to multiple loci": int,
+        "Number of reads mapped to too many loci": int,
+        "Number of splices: AT/AC": int,
+        "Number of splices: Annotated (sjdb)": int,
+        "Number of splices: GC/AG": int,
+        "Number of splices: GT/AG": int,
+        "Number of splices: Non-canonical": int,
+        "Number of splices: Total": int,
+        "Uniquely mapped reads %": parse_pct,
+        "Uniquely mapped reads number": int,
     }
     return parse_metric(record, columns)
 
@@ -1270,35 +1270,36 @@ def parse_star_stats(record):
 def parse_gene_type_quantification(record):
     """Parse GeneTypeQuantificationQualityMetric results"""
     columns = {
-        'Mt_rRNA': int,
-        'antisense': int,
-        'miRNA': int,
-        'processed_transcript': int,
-        'protein_coding': int,
-        'rRNA': int,
-        'ribozyme': int,
-        'sRNA': int,
-        'scaRNA': int,
-        'sense_intronic': int,
-        'sense_overlapping': int,
-        'snRNA': int,
-        'snoRNA': int,
-        'spikein': int
+        "Mt_rRNA": int,
+        "antisense": int,
+        "miRNA": int,
+        "processed_transcript": int,
+        "protein_coding": int,
+        "rRNA": int,
+        "ribozyme": int,
+        "sRNA": int,
+        "scaRNA": int,
+        "sense_intronic": int,
+        "sense_overlapping": int,
+        "snRNA": int,
+        "snoRNA": int,
+        "spikein": int,
     }
     return parse_metric(record, columns)
 
 
 def parse_mad_metric(record):
     """Parse MadQualityMetric results"""
+
     def get_href(record):
-        return record['href']
+        return record["href"]
 
     columns = {
-        'attachment': get_href,
-        'SD of log ratios': float,
-        'Pearson correlation': float,
-        'Spearman correlation': float,
-        'MAD of log ratios': float,
+        "attachment": get_href,
+        "SD of log ratios": float,
+        "Pearson correlation": float,
+        "Spearman correlation": float,
+        "MAD of log ratios": float,
     }
     return parse_metric(record, columns)
 
@@ -1306,18 +1307,18 @@ def parse_mad_metric(record):
 def parse_genes_detected(record):
     """Parse GeneQuantificationQualityMetric results"""
     columns = {
-        'quality_metric_of': list,
-        'number_of_genes_detected': int,
+        "quality_metric_of": list,
+        "number_of_genes_detected": int,
     }
     return parse_metric(record, columns)
 
 
 QUALITY_METRIC_PARSERS = {
-    'SamtoolsFlagstatsQualityMetric': parse_samtools_stats,
-    'StarQualityMetric': parse_star_stats,
-    'GeneTypeQuantificationQualityMetric': parse_gene_type_quantification,
-    'MadQualityMetric': parse_mad_metric,
-    'GeneQuantificationQualityMetric': parse_genes_detected,
+    "SamtoolsFlagstatsQualityMetric": parse_samtools_stats,
+    "StarQualityMetric": parse_star_stats,
+    "GeneTypeQuantificationQualityMetric": parse_gene_type_quantification,
+    "MadQualityMetric": parse_mad_metric,
+    "GeneQuantificationQualityMetric": parse_genes_detected,
 }
 
 
