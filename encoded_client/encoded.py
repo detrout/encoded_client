@@ -486,7 +486,10 @@ class ENCODED:
 
             if len(new_object) > 0:
                 try:
-                    validator.validate(new_object, collection)
+                    if new_object.get(accession_name) is None or (
+                        not new_object.get(accession_name).lower().startswith("skip")
+                    ):
+                        validator.validate(new_object, collection)
                 except jsonschema.ValidationError as e:
                     LOGGER.error("Validation error row %s", i)
                     raise e
