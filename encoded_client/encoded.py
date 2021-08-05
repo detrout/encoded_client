@@ -138,6 +138,7 @@ class ENCODED:
 
     Encoded is the software powering ENCODE3 and 4's submit site.
     """
+
     def __init__(self, server, contexts=None, namespaces=None):
         self.server = server
         self.scheme = "https"
@@ -1029,8 +1030,8 @@ class Document(object):
 
 
 class EncodeExperiment(Mapping):
-    """Helper class for accessing ENCODED experiment objects
-    """
+    """Helper class for accessing ENCODED experiment objects"""
+
     def __init__(self, server, json=None):
         self._server = server
         self._json = json
@@ -1044,14 +1045,16 @@ class EncodeExperiment(Mapping):
         supported_versions = {"33", "34"}
         if self.schema_version not in supported_versions:
             LOGGER.warning(
-                "New schema version {} may not be supported".format(
-                    self.schema_version))
+                "New schema version {} may not be supported".format(self.schema_version)
+            )
 
     def _calculate_derived_from(self):
         def find_source_replicate(derived_map, current_file, replicate_map):
             if current_file in replicate_map:
                 return replicate_map[current_file]
-            return find_source_replicate(derived_map, derived_map[current_file], replicate_map)
+            return find_source_replicate(
+                derived_map, derived_map[current_file], replicate_map
+            )
 
         file_replicate_map = {}
         our_files = set((f["@id"] for f in self._json["files"]))
@@ -1067,13 +1070,14 @@ class EncodeExperiment(Mapping):
 
         for derived_file in derived_map:
             file_replicate_map[derived_file] = find_source_replicate(
-                derived_map,
-                derived_file,
-                file_replicate_map)
+                derived_map, derived_file, file_replicate_map
+            )
 
         self._replicate_file_map = {}
         for file_id in file_replicate_map:
-            self._replicate_file_map.setdefault(file_replicate_map[file_id], []).append(file_id)
+            self._replicate_file_map.setdefault(file_replicate_map[file_id], []).append(
+                file_id
+            )
 
         return self._replicate_file_map
 
@@ -1199,7 +1203,9 @@ class EncodeFile(Mapping):
         return len(self._json)
 
     def __repr__(self):
-        return "<EncodeFile: {} {}>".format(self._json["@id"], self._json["output_type"])
+        return "<EncodeFile: {} {}>".format(
+            self._json["@id"], self._json["output_type"]
+        )
 
 
 def parse_pct(value):
@@ -1219,8 +1225,7 @@ def parse_metric(record, column_parser):
 
 
 def parse_samtools_stats(record):
-    """Parse SamtoolsFlagstatsQualityMetric file
-    """
+    """Parse SamtoolsFlagstatsQualityMetric file"""
     columns = {
         "quality_metric_of": list,
         "duplicates": int,
