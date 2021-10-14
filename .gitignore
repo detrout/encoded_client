@@ -5,3 +5,4 @@ __pycache__/
 .tox/
 *.egg-info/
 docs/_build/
+encoded_client/_version.py
