@@ -143,8 +143,8 @@ class ENCODED:
         self.server = server
         self.scheme = "https"
         self._session = requests.session()
-        self.username = None
-        self.password = None
+        self.username = os.environ.get("DCC_API_KEY")
+        self.password = os.environ.get("DCC_SECRET_KEY")
         self._user = None
         self.contexts = contexts if contexts else ENCODED_CONTEXT
         self.namespaces = namespaces if namespaces else ENCODED_NAMESPACES
