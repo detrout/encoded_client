@@ -145,6 +145,7 @@ class ENCODED:
         self._session = requests.session()
         self.username = os.environ.get("DCC_API_KEY")
         self.password = os.environ.get("DCC_SECRET_KEY")
+        self.load_netrc()
         self._user = None
         self.contexts = contexts if contexts else ENCODED_CONTEXT
         self.namespaces = namespaces if namespaces else ENCODED_NAMESPACES
