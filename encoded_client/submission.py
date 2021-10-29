@@ -48,11 +48,10 @@ def process_files(server, files, dry_run):
 
 def upload(server, validator, files, dry_run=True, retry=False):
     created = []
-    print(files.columns)
     to_create = server.prepare_objects_from_sheet('/files/', files, validator=validator)
     for i, new_object in to_create:
         if new_object is not None and pandas.isnull(new_object.get('accession')):
-            print('Would upload {}'.format(new_object['submitted_file_name']))
+            logger.debug('Would upload {}'.format(new_object['submitted_file_name']))
             posted_object = upload_file(server, validator, new_object, dry_run, retry)
             created.append(posted_object)
 
@@ -181,7 +180,7 @@ def main(cmdline=None):
     try:
         process_files(server, files, args.dry_run)
     except Exception as e:
-        print(e)
+        logger.error(e)
 
     if args.output_file:
         save_book(args.output_file, book, {'File': files})
