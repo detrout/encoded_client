@@ -472,7 +472,14 @@ class TestEncodeExperiment(TestCase):
                     qc_types_seen.add(get_object_type(qc_seen[-1]))
 
             self.assertGreaterEqual(len(qc_seen), 4)
-            print(qc_types_seen)
+            expected = {
+                'GeneQuantificationQualityMetric',
+                'SamtoolsFlagstatsQualityMetric',
+                'MadQualityMetric',
+                'GeneTypeQuantificationQualityMetric',
+                'StarQualityMetric'}
+            for e in expected:
+                self.assertIn(e, qc_types_seen)
 
         self.assertEqual(library_aliases_seen, library_aliases_expected)
         self.assertEqual(file_formats_expected, file_formats_seen)
