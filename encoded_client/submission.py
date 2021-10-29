@@ -8,7 +8,7 @@ import pandas
 import subprocess
 import time
 
-from .encoded import DCCValidator
+from .encoded import ENCODED, DCCValidator
 from .sheet import open_book, save_book
 
 logger = logging.getLogger(__name__)
