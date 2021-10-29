@@ -10,7 +10,7 @@ import time
 
 from .encoded import DCCValidator
 
-LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def run_aws_cp(pathname, creds):
@@ -28,11 +28,11 @@ def run_aws_cp(pathname, creds):
             ["aws", "s3", "cp", pathname, creds["upload_url"]], env=env
         )
     except subprocess.CalledProcessError as e:
-        LOGGER.error("Upload of %s failed with exit code %d", pathname, e.returncode)
+        logger.error("Upload of %s failed with exit code %d", pathname, e.returncode)
         return
     else:
         end = time.time()
-        LOGGER.info("Upload of %s finished in %.2f seconds", pathname, end - start)
+        logger.info("Upload of %s finished in %.2f seconds", pathname, end - start)
 
 
 def process_files(server, files, dry_run):
@@ -88,24 +88,24 @@ def upload_file(encode, validator, metadata, dry_run=True, retry=False):
             file_name_field = field
 
     if file_name_field is None:
-        LOGGER.error("Couldn't find file name to upload in metadata")
-        LOGGER.error(json.dumps(metadata, indent=4, sort_keys=True))
+        logger.error("Couldn't find file name to upload in metadata")
+        logger.error(json.dumps(metadata, indent=4, sort_keys=True))
         return
 
     upload = make_upload_filename(metadata, encode)
     if retry or not os.path.exists(upload):
-        LOGGER.debug(json.dumps(metadata, indent=4, sort_keys=True))
+        logger.debug(json.dumps(metadata, indent=4, sort_keys=True))
         if not dry_run:
             item = post_file_metadata(encode, metadata, upload, retry)
             creds = item["upload_credentials"]
             run_aws_cp(metadata[file_name_field], creds)
             return item
         else:
-            LOGGER.info("Would upload %s", metadata[file_name_field])
+            logger.info("Would upload %s", metadata[file_name_field])
             metadata["accession"] = "would create"
             return metadata
     else:
-        LOGGER.info("%s already uploaded", metadata[file_name_field])
+        logger.info("%s already uploaded", metadata[file_name_field])
 
 
 def post_file_metadata(encode, metadata, upload, retry=False):
@@ -119,7 +119,7 @@ def post_file_metadata(encode, metadata, upload, retry=False):
     """
     if not retry:
         response = encode.post_json("/file", metadata)
-        LOGGER.info(json.dumps(response, indent=4, sort_keys=True))
+        logger.info(json.dumps(response, indent=4, sort_keys=True))
         with open(upload, "w") as outstream:
             json.dump(response, outstream, indent=4, sort_keys=True)
 
