@@ -165,7 +165,7 @@ class ENCODED:
 
         session = netrc.netrc()
         authenticators = session.authenticators(self.server)
-        if authenticators:
+        if authenticators is not None:
             self.username = authenticators[0]
             self.password = authenticators[2]
 
