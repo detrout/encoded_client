@@ -155,6 +155,9 @@ class ENCODED:
 
     @property
     def auth(self):
+        if self.username is None and self.password is None:
+            return None
+
         return (self.username, self.password)
 
     def load_netrc(self):
