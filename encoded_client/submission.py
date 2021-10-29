@@ -64,7 +64,7 @@ def upload(server, validator, files, dry_run=True, retry=False):
                 if 'uuid' in files.columns:
                     files.loc[i, 'uuid'] = uuid
 
-    logger.info('created {} objects'.formt(len(created)))
+    logger.info('created {} objects'.format(len(created)))
     return created
 
 
