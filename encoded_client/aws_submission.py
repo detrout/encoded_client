@@ -1,6 +1,6 @@
 """Partially through ENCODE3 the DCC switched to needing to upload via AWS
 """
-
+from argparse import ArgumentParser
 import logging
 import json
 import os
@@ -9,6 +9,7 @@ import subprocess
 import time
 
 from .encoded import DCCValidator
+from .sheet import open_book, save_book
 
 logger = logging.getLogger(__name__)
 
@@ -138,3 +139,53 @@ def make_upload_filename(metadata, server=None):
     else:
         extension = ".upload"
     return filename + extension
+
+
+def main(cmdline=None):
+    parser = ArgumentParser()
+    parser.add_argument(
+        '-s',
+        '--server',
+        required=True,
+        choices=[
+            'www.encodeproject.org',
+            'test.encodedcc.org',
+        ],
+        help='DCC Server to upload to'
+    )
+    parser.add_argument(
+        '-f',
+        '--spreadsheet-file',
+        required=True,
+        help='Metadata spreadsheet filename'
+    )
+    parser.add_argument(
+        '-t',
+        '--sheet-name',
+        default='File',
+        help='Override default file sheet name'
+    )
+    parser.add_argument('-o', '--output-file', help='Write sheet progress')
+    parser.add_argument('-n', '--dry-run', action='store_true', default=False)
+    args = parser.parse_args(cmdline)
+
+    logging.basicConfig(level=logging.INFO)
+
+    logging.info('Server: %s', args.server)
+    logging.info('Spreadsheet: %s', args.spreadsheet_file)
+    server = ENCODED(args.server)
+    server.load_netrc()
+
+    book = open_book(args.spreadsheet_file)
+    files = book.parse(args.sheet_name, header=0)
+    try:
+        process_files(server, files, args.dry_run)
+    except Exception as e:
+        print(e)
+
+    if args.output_file:
+        save_book(args.output_file, book, {'File': files})
+
+
+if __name__ == "__main__":
+    main()
