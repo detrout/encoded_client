@@ -4,6 +4,7 @@
 import logging
 import json
 import os
+import pandas
 import subprocess
 import time
 
@@ -32,6 +33,38 @@ def run_aws_cp(pathname, creds):
     else:
         end = time.time()
         LOGGER.info("Upload of %s finished in %.2f seconds", pathname, end - start)
+
+
+def process_files(server, files, dry_run):
+    """Validate sheet and then upload files
+    """
+    logger.info('Validating metadata')
+    validator = DCCValidator(server=server)
+
+    logger.info('Uploading files')
+    upload(server, validator, files, dry_run=dry_run)
+
+
+def upload(server, validator, files, dry_run=True, retry=False):
+    created = []
+    print(files.columns)
+    to_create = server.prepare_objects_from_sheet('/files/', files, validator=validator)
+    for i, new_object in to_create:
+        if new_object is not None and pandas.isnull(new_object.get('accession')):
+            print('Would upload {}'.format(new_object['submitted_file_name']))
+            posted_object = upload_file(server, validator, new_object, dry_run, retry)
+            created.append(posted_object)
+
+            if posted_object:
+                accession = posted_object.get('accession')
+                uuid = posted_object.get('uuid')
+                if 'accession' in files.columns:
+                    files.loc[i, 'accession'] = accession
+                if 'uuid' in files.columns:
+                    files.loc[i, 'uuid'] = uuid
+
+    logger.info('created {} objects'.formt(len(created)))
+    return created
 
 
 def upload_file(encode, validator, metadata, dry_run=True, retry=False):
