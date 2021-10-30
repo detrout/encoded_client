@@ -9,6 +9,7 @@ import base64
 from collections.abc import Sequence, Iterable, Mapping
 import hashlib
 import logging
+from pathlib import Path
 import json
 import jsonschema
 import os
@@ -145,7 +146,8 @@ class ENCODED:
         self._session = requests.session()
         self.username = os.environ.get("DCC_API_KEY")
         self.password = os.environ.get("DCC_SECRET_KEY")
-        self.load_netrc()
+        if Path("~/.netrc").expanduser().exists():
+            self.load_netrc()
         self._user = None
         self.contexts = contexts if contexts else ENCODED_CONTEXT
         self.namespaces = namespaces if namespaces else ENCODED_NAMESPACES
