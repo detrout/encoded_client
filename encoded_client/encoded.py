@@ -146,8 +146,6 @@ class ENCODED:
         self._session = requests.session()
         self.username = os.environ.get("DCC_API_KEY")
         self.password = os.environ.get("DCC_SECRET_KEY")
-        if Path("~/.netrc").expanduser().exists():
-            self.load_netrc()
         self._user = None
         self.contexts = contexts if contexts else ENCODED_CONTEXT
         self.namespaces = namespaces if namespaces else ENCODED_NAMESPACES
@@ -164,13 +162,15 @@ class ENCODED:
         return (self.username, self.password)
 
     def load_netrc(self):
-        import netrc
+        netrc_path = Path("~/.netrc").expanduser()
+        if netrc_path.exists():
+            import netrc
 
-        session = netrc.netrc()
-        authenticators = session.authenticators(self.server)
-        if authenticators is not None:
-            self.username = authenticators[0]
-            self.password = authenticators[2]
+            session = netrc.netrc()
+            authenticators = session.authenticators(self.server)
+            if authenticators is not None:
+                self.username = authenticators[0]
+                self.password = authenticators[2]
 
     def add_jsonld_context(self, tree, default_base):
         """Add contexts to various objects in the tree.
@@ -1340,7 +1340,6 @@ if __name__ == "__main__":
     model = Graph()
     logging.basicConfig(level=logging.DEBUG)
     encoded = ENCODED("test.encodedcc.org")
-    encoded.load_netrc()
     body = encoded.get_jsonld("/experiments/ENCSR000AEC/")
     model.parse(body)
     print(model.serialize(format="turtle"))
