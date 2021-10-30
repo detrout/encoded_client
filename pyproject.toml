@@ -17,10 +17,7 @@ skip_missing_interpreters=True
 
 [testenv]
 commands=pytest --cov=encoded_client
-deps=
-  pytest
-  pytest-cov
-
-#[testenv:clean]
-#deps=coverage
+extras =
+  test
+  rdf
 """
