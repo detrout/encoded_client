@@ -43,7 +43,7 @@ def process_files(server, files, dry_run):
     validator = DCCValidator(server=server)
 
     logger.info('Uploading files')
-    upload(server, validator, files, dry_run=dry_run)
+    return upload(server, validator, files, dry_run=dry_run)
 
 
 def upload(server, validator, files, dry_run=True, retry=False):
