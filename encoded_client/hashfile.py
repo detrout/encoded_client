@@ -49,3 +49,24 @@ def parse_md5sum_line(lines, filename):
         logger.error(errmsg.format(filename, md5sum_filename))
         return None
     return md5sum
+
+
+def main(cmdline=None):
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser()
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", default="False", help="verbose logging"
+    )
+    parser.add_argument("filenames", nargs="+", help="filenames to build md5 cache for")
+    args = parser.parse_args(cmdline)
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
+    for filename in args.filenames:
+        make_md5sum(filename)
+
+
+if __name__ == "__main__":
+    main()
