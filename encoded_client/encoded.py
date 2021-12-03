@@ -112,6 +112,7 @@ COLLECTION_TO_TYPE = {
     "/mouse-donors/": "MouseDonor",
     "/organisms/": "Organism",
     "/replicates/": "Replicate",
+    "/star_quality_metric": "StarQualityMetric",
     "/files/": "File",
 }
 
