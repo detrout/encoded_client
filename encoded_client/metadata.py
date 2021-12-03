@@ -74,7 +74,7 @@ def generate_star_solo_processed_metadata(config, records):
             'output_type': output_type,
             'assembly': config["genome_assembly"],
             'genome_annotation': config["genome_annotation"],
-            'step_run': '/analysis-step-runs/aa2ed4a1-331b-4d63-888e-57e1055b7568/',
+            'step_run': config["step_run"],
             'derived_from:array': ",".join(derived_from),
             'md5sum': make_md5sum(filename),
             'file_size:integer': Path(filename).stat().st_size,

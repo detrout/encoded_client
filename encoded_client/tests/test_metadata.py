@@ -82,6 +82,7 @@ class test_metadata(TestCase):
             "lab": "/labs/my-lab/",
             "alias_prefix": "my-lab",
             "award": "award",
+            "step_run": "/analysis-step-runs/aa2ed4a1-331b-4d63-888e-57e1055b7568/",
         }
 
         processed_files = {
