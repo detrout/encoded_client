@@ -67,6 +67,8 @@ class test_metadata(TestCase):
     def test_generate_star_solo_processed_metadata(self, mock_md5sum, mock_path):
         mock_path.stat.return_value = mock_stat()
 
+        alignment_step_run = "barbara-wold:starsolo-alignment-step-run"
+        quantification_step_run = "barbara-wold:starsolo-quantification-step-run"
         config = {
             "read1": ["ENCFF150FBF", "ENCFF385IAW"],
             "read2": ["ENCFF351VBS", "ENCFF503CCI"],
@@ -82,7 +84,8 @@ class test_metadata(TestCase):
             "lab": "/labs/my-lab/",
             "alias_prefix": "my-lab",
             "award": "award",
-            "step_run": "/analysis-step-runs/aa2ed4a1-331b-4d63-888e-57e1055b7568/",
+            "alignment_step_run": alignment_step_run,
+            "quantification_step_run": quantification_step_run,
         }
 
         processed_files = {
@@ -125,5 +128,7 @@ class test_metadata(TestCase):
                 self.assertEqual(
                     record["derived_from:array"], expected_bam_derived_from
                 )
+                self.assertEqual(record["step_run"], alignment_step_run)
             else:
                 self.assertEqual(record["derived_from:array"], alias)
+                self.assertEqual(record["step_run"], quantification_step_run)

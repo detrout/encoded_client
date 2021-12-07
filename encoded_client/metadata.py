@@ -1,6 +1,9 @@
 import datetime
+import logging
 from pathlib import Path
 from encoded_client.hashfile import make_md5sum
+
+logger = logging.getLogger(__name__)
 
 
 def format_accession(container, accession):
@@ -74,7 +77,6 @@ def generate_star_solo_processed_metadata(config, records):
             'output_type': output_type,
             'assembly': config["genome_assembly"],
             'genome_annotation': config["genome_annotation"],
-            'step_run': config["step_run"],
             'derived_from:array': ",".join(derived_from),
             'md5sum': make_md5sum(filename),
             'file_size:integer': Path(filename).stat().st_size,
@@ -83,7 +85,12 @@ def generate_star_solo_processed_metadata(config, records):
             'lab': config["lab"],
         }
         if file_type == "bam":
+            obj['step_run'] = config["alignment_step_run"]
             obj['aliases'] = [alignment_alias]
+        elif file_type == "tar":
+            obj['step_run'] = config["quantification_step_run"]
+        else:
+            logger.error("Unknown file type {}".format(file_type))
         rows.append(obj)
 
     return rows
