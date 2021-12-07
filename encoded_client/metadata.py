@@ -1,5 +1,6 @@
 import datetime
 import logging
+import pandas
 from pathlib import Path
 from encoded_client.hashfile import make_md5sum
 
@@ -77,9 +78,9 @@ def generate_star_solo_processed_metadata(config, records):
             'output_type': output_type,
             'assembly': config["genome_assembly"],
             'genome_annotation': config["genome_annotation"],
-            'derived_from:array': ",".join(derived_from),
+            'derived_from': derived_from,
             'md5sum': make_md5sum(filename),
-            'file_size:integer': Path(filename).stat().st_size,
+            'file_size': Path(filename).stat().st_size,
             'submitted_file_name': str(filename),
             'award': config["award"],
             'lab': config["lab"],
@@ -94,3 +95,29 @@ def generate_star_solo_processed_metadata(config, records):
         rows.append(obj)
 
     return rows
+
+
+def generate_star_solo_processed_sheet(config, records):
+    rows = generate_star_solo_processed_metadata(config, records)
+
+    sheet = pandas.DataFrame(rows)
+
+    for array in ["aliases", "derived_from"]:
+        if array in sheet.columns:
+            sheet[array] = sheet[array].apply(to_array_sheet)
+
+    sheet = sheet.rename({
+        "aliases": "aliases:array",
+        "derived_from": "derived_from:array",
+        "file_size": "file_size:integer",
+    }, axis=1)
+
+    return sheet
+
+
+def to_array_sheet(value):
+    nulls = pandas.isnull(value)
+    if nulls is True:
+        return None
+
+    return ",".join(value)
