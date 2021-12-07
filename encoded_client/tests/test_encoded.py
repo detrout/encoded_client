@@ -18,46 +18,56 @@ from ..encoded import (
 )
 
 
+def load_dcc_schemas(validator):
+    for schema, filename in [
+            ("file", "file.json"),
+            ("library", "library.json"),
+            ("biosample", "biosample.json"),
+            ("star_solo_quality_metric", "star_solo_quality_metric.json"),
+    ]:
+        schema_file = os.path.join(os.path.dirname(__file__), filename)
+        with open(schema_file, "rt") as instream:
+            validator._schemas[schema] = json.load(instream)
+
+
+def get_test_dcc_user():
+    return {
+        "@context": "/terms/",
+        "@id": "/users/bc5b62f7-ce28-4a1e-b6b3-81c9c5a86d7a/",
+        "@type": ["User", "Item"],
+        "first_name": "Diane",
+        "groups": [],
+        "job_title": "Submitter",
+        "lab": {
+            "@id": "/labs/barbara-wold/",
+            "@type": ["Lab", "Item"],
+            "country": "USA",
+            "institute_label": "Caltech",
+            "institute_name": "California Institute of Technology",
+            "pi": "/users/0598c868-0b4a-4c5b-9112-8f85c5de5374/",
+            "schema_version": "4",
+            "title": "Barbara Wold, Caltech",
+            "uuid": "72d5666a-a361-4f7b-ab66-a88e11280937",
+        },
+        "last_name": "Trout",
+        "schema_version": "5",
+        "submits_for": [
+            "/labs/barbara-wold/",
+            "/labs/richard-myers/",
+            "/labs/ali-mortazavi/",
+        ],
+        "uuid": "bc5b62f7-ce28-4a1e-b6b3-81c9c5a86d7a",
+    }
+
+
 class TestEncoded(TestCase):
     def setUp(self):
         self.encode = ENCODED("www.encodeproject.org")
-        self.encode._user = {
-            "@context": "/terms/",
-            "@id": "/users/bc5b62f7-ce28-4a1e-b6b3-81c9c5a86d7a/",
-            "@type": ["User", "Item"],
-            "first_name": "Diane",
-            "groups": [],
-            "job_title": "Submitter",
-            "lab": {
-                "@id": "/labs/barbara-wold/",
-                "@type": ["Lab", "Item"],
-                "country": "USA",
-                "institute_label": "Caltech",
-                "institute_name": "California Institute of Technology",
-                "pi": "/users/0598c868-0b4a-4c5b-9112-8f85c5de5374/",
-                "schema_version": "4",
-                "title": "Barbara Wold, Caltech",
-                "uuid": "72d5666a-a361-4f7b-ab66-a88e11280937",
-            },
-            "last_name": "Trout",
-            "schema_version": "5",
-            "submits_for": [
-                "/labs/barbara-wold/",
-                "/labs/richard-myers/",
-                "/labs/ali-mortazavi/",
-            ],
-            "uuid": "bc5b62f7-ce28-4a1e-b6b3-81c9c5a86d7a",
-        }
+        self.encode._user = get_test_dcc_user()
 
         logging.disable(logging.WARNING)
         self.validator = DCCValidator(self.encode)
-        for schema, filename in [
-            ("library", "library.json"),
-            ("biosample", "biosample.json"),
-        ]:
-            schema_file = os.path.join(os.path.dirname(__file__), filename)
-            with open(schema_file, "rt") as instream:
-                self.validator._schemas[schema] = json.load(instream)
+        load_dcc_schemas(self.validator)
 
     def tearDown(self):
         logging.disable(logging.NOTSET)
