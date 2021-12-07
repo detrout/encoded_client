@@ -79,7 +79,6 @@ def generate_star_solo_processed_metadata(config, records):
             'md5sum': make_md5sum(filename),
             'file_size:integer': Path(filename).stat().st_size,
             'submitted_file_name': str(filename),
-            #'quality_metrics:json':
             'award': config["award"],
             'lab': config["lab"],
         }
