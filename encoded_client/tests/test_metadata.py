@@ -14,9 +14,13 @@ from ..metadata import (
 
 
 def mock_stat():
-    return os.stat_result(
-        (33188, 300, 50, 1, 1000, 1000, 1000, 1635793563, 1635793563, 1635793563)
-    )
+    class MockStatResult:
+        def stat(self):
+            return os.stat_result(
+                (33188, 300, 50, 1, 1000, 1000, 1000, 1635793563, 1635793563, 1635793563)
+            )
+
+    return MockStatResult()
 
 
 def md5sum_string(s):
@@ -65,7 +69,7 @@ class test_metadata(TestCase):
     @patch("encoded_client.metadata.Path")
     @patch("encoded_client.metadata.make_md5sum", wraps=md5sum_string)
     def test_generate_star_solo_processed_metadata(self, mock_md5sum, mock_path):
-        mock_path.stat.return_value = mock_stat()
+        mock_path.return_value = mock_stat()
 
         alignment_step_run = "barbara-wold:starsolo-alignment-step-run"
         quantification_step_run = "barbara-wold:starsolo-quantification-step-run"
