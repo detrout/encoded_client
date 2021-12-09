@@ -1012,15 +1012,7 @@ class Document(object):
 
     def create_payload(self):
         document_payload = {
-            "attachment": {
-                "download": self.filename,
-                "type": self.content_type,
-                "href": "data:"
-                + self.content_type
-                + ";base64,"
-                + base64.b64encode(self.document).decode("ascii"),
-                "md5sum": self.md5sum.hexdigest(),
-            },
+            "attachment": make_attachment(self.filename, mime_type=self.content_type),
             "document_type": self.document_type,
             "description": self.description,
             "award": self.award,
@@ -1349,6 +1341,42 @@ QUALITY_METRIC_PARSERS = {
     "MadQualityMetric": parse_mad_metric,
     "GeneQuantificationQualityMetric": parse_genes_detected,
 }
+
+
+def make_attachment(filename, mime_type=None):
+    mime_type_default = {
+        ".pdf": "application/pdf",
+        ".tar": "application/x-tar",
+        ".json": "application/json",
+        ".gif": "image/gif",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".png": "image/png",
+        ".tif": "image/tiff",
+        ".tiff": "image/tiff",
+        ".html": "text/html",
+        ".txt": "text/plain",
+        ".tsv": "text/tab-separated-values"
+    }
+
+    filename = Path(filename)
+    if mime_type is None:
+        mime_type = mime_type_default[filename.suffix]
+        if mime_type is None:
+            raise ValueError("Unrecognized filename extension")
+
+    with open(filename, "rb") as instream:
+        document = instream.read()
+
+    short_name = filename.name
+    payload = {
+        'download': str(short_name),
+        'type': mime_type,
+        'href': 'data:{};base64,'.format(mime_type) +
+                base64.b64encode(document).decode("ascii"),
+        'md5sum': hashlib.md5(document).hexdigest()
+    }
+    return payload
 
 
 if __name__ == "__main__":
