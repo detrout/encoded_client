@@ -749,7 +749,7 @@ class DCCValidator:
         """
         # store aliases
         for a in obj.get("aliases", []):
-            if a in self._aliases:
+            if a in self._aliases and self._aliases[a] != obj:
                 raise DuplicateAliasError("{} was already used else where".format(a))
             self._aliases[a] = obj
 
