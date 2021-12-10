@@ -55,7 +55,7 @@ def get_sample_config1():
         "description": "snRNA on human adrenal gland",
         "library_accession": "ENCLB002DZK",
         "genome_accession": "ENCFF795ZFF",
-        "genome_assembly": "GRCh38",
+        "assembly": "GRCh38",
         "genome_annotation": "V29",
         "inclusion_list_url": DEFAULT_INCLUSION,
         "lab": "/labs/barbara-wold/",

@@ -87,7 +87,7 @@ def generate_star_solo_processed_metadata(config, records):
             'dataset': config["experiment_accession"],
             'file_format': file_type,
             'output_type': output_type,
-            'assembly': config["genome_assembly"],
+            'assembly': config["assembly"],
             'genome_annotation': config["genome_annotation"],
             'derived_from': derived_from,
             'md5sum': make_md5sum(filename),
