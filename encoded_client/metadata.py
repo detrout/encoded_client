@@ -37,8 +37,15 @@ def compute_alignment_derived_from(index_accessions, read1, read2=None):
     return derived_from
 
 
-def compute_count_matrix_derived_from(alignment):
-    return [format_accession("files", alignment)]
+def compute_inclusion_id(inclusion_list_url):
+    name = Path(inclusion_list_url).name
+    dcc_id = format_accession("files", name)
+    return dcc_id
+
+def compute_count_matrix_derived_from(inclusion_url, alignment):
+    derived_from = [compute_inclusion_id(inclusion_url)]
+    derived_from.append(format_accession("files", alignment))
+    return derived_from
 
 
 def compute_alignment_alias(alias_prefix, library, datestamp):
@@ -68,7 +75,8 @@ def generate_star_solo_processed_metadata(config, records):
         if file_type == "bam":
             derived_from = compute_alignment_derived_from(config["genome_accession"], config['read1'], config['read2'])
         elif file_type == "tar":
-            derived_from = compute_count_matrix_derived_from(alignment_alias)
+            inclusion_id = compute_inclusion_id(config["inclusion_list_url"])
+            derived_from = compute_count_matrix_derived_from(inclusion_id, alignment_alias)
 
         obj = {
             'uuid': None,

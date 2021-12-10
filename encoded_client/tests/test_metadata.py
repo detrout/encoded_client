@@ -14,9 +14,12 @@ from ..metadata import (
     compute_alignment_derived_from,
     compute_count_matrix_derived_from,
     compute_alignment_alias,
+    compute_inclusion_id,
     generate_star_solo_processed_metadata,
     generate_star_solo_processed_sheet,
 )
+
+DEFAULT_INCLUSION = "https://www.encodeproject.org/files/gex_737K-arc-v1.txt.gz/@@download/gex_737K-arc-v1.txt.gz"
 
 
 def mock_stat():
@@ -25,6 +28,10 @@ def mock_stat():
             return os.stat_result(
                 (33188, 300, 50, 1, 1000, 1000, 1000, 1635793563, 1635793563, 1635793563)
             )
+
+        @property
+        def name(self):
+            return DEFAULT_INCLUSION[DEFAULT_INCLUSION.rfind("/")+1:]
 
     return MockStatResult()
 
@@ -46,6 +53,7 @@ def get_sample_config1():
         "genome_accession": "ENCFF795ZFF",
         "genome_assembly": "GRCh38",
         "genome_annotation": "V29",
+        "inclusion_list_url": DEFAULT_INCLUSION,
         "lab": "/labs/barbara-wold/",
         "alias_prefix": "barbara-wold",
         "award": "UM1HG009443",
@@ -64,6 +72,7 @@ def get_processed_files1():
         "unfiltered sparse splice junction count matrix of unique reads": "SJ_Unique_raw.tar.gz",
     }
 
+
 class test_metadata(TestCase):
     def setUp(self):
         sctest = "encd-6248-78c147870-qing.demo.encodedcc.org"
@@ -77,6 +86,12 @@ class test_metadata(TestCase):
 
     def tearDown(self):
         logging.disable(logging.NOTSET)
+
+    def test_compute_inclusion_id(self):
+        inclusion_id = compute_inclusion_id(DEFAULT_INCLUSION)
+        self.assertEqual(
+            inclusion_id,
+            "/files/{}/".format(DEFAULT_INCLUSION[DEFAULT_INCLUSION.rfind("/")+1:]))
 
     def test_compute_alignment_derived_from(self):
         read1 = ["ENCFF150FBF", "ENCFF385IAW"]
@@ -113,9 +128,9 @@ class test_metadata(TestCase):
         alias = compute_alignment_alias("barbara-wold", "ENCLB002DZK", datestamp)
         self.assertEqual(alias, "barbara-wold:ENCLB002DZK_alignment_2021-11-22")
 
-        derived_from = compute_count_matrix_derived_from(alias)
-        self.assertEqual(len(derived_from), 1)
-        self.assertEqual(derived_from, [alias])
+        derived_from = compute_count_matrix_derived_from(DEFAULT_INCLUSION, alias)
+        self.assertEqual(len(derived_from), 2)
+        self.assertEqual(derived_from, ["/files/gex_737K-arc-v1.txt.gz/", alias])
 
     @patch("encoded_client.metadata.Path")
     @patch("encoded_client.metadata.make_md5sum", wraps=md5sum_string)
@@ -158,7 +173,7 @@ class test_metadata(TestCase):
                 )
                 self.assertEqual(record["step_run"], alignment_step_run)
             else:
-                self.assertEqual(record["derived_from"], [alias])
+                self.assertEqual(record["derived_from"], ["/files/gex_737K-arc-v1.txt.gz/", alias])
                 self.assertEqual(record["step_run"], quantification_step_run)
 
             hidden = record.copy()
