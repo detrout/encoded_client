@@ -39,8 +39,11 @@ def compute_alignment_derived_from(index_accessions, read1, read2=None):
 
 def compute_inclusion_id(inclusion_list_url):
     name = Path(inclusion_list_url).name
+    if name.endswith(".txt.gz"):
+        name = name[:-len(".txt.gz")]
     dcc_id = format_accession("files", name)
     return dcc_id
+
 
 def compute_count_matrix_derived_from(inclusion_url, alignment):
     derived_from = [compute_inclusion_id(inclusion_url)]

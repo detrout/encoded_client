@@ -20,7 +20,7 @@ from ..metadata import (
 )
 
 DEFAULT_INCLUSION = "https://www.encodeproject.org/files/gex_737K-arc-v1.txt.gz/@@download/gex_737K-arc-v1.txt.gz"
-
+DEFAULT_INCLUSION = "https://encd-6248-78c147870-qing.demo.encodedcc.org/files/737K-arc-v1(GEX)/@@download/737K-arc-v1(GEX).txt.gz"
 
 def mock_stat():
     class MockStatResult:
@@ -32,6 +32,10 @@ def mock_stat():
         @property
         def name(self):
             return DEFAULT_INCLUSION[DEFAULT_INCLUSION.rfind("/")+1:]
+
+        @property
+        def basename(self):
+            return DEFAULT_INCLUSION[DEFAULT_INCLUSION.rfind("/")+1:-len(".tar.gz")]
 
     return MockStatResult()
 
@@ -91,7 +95,7 @@ class test_metadata(TestCase):
         inclusion_id = compute_inclusion_id(DEFAULT_INCLUSION)
         self.assertEqual(
             inclusion_id,
-            "/files/{}/".format(DEFAULT_INCLUSION[DEFAULT_INCLUSION.rfind("/")+1:]))
+            "/files/{}/".format(DEFAULT_INCLUSION[DEFAULT_INCLUSION.rfind("/")+1:-len(".tar.gz")]))
 
     def test_compute_alignment_derived_from(self):
         read1 = ["ENCFF150FBF", "ENCFF385IAW"]
@@ -130,7 +134,7 @@ class test_metadata(TestCase):
 
         derived_from = compute_count_matrix_derived_from(DEFAULT_INCLUSION, alias)
         self.assertEqual(len(derived_from), 2)
-        self.assertEqual(derived_from, ["/files/gex_737K-arc-v1.txt.gz/", alias])
+        self.assertEqual(derived_from, ["/files/{}/".format(mock_stat().basename), alias])
 
     @patch("encoded_client.metadata.Path")
     @patch("encoded_client.metadata.make_md5sum", wraps=md5sum_string)
@@ -173,7 +177,7 @@ class test_metadata(TestCase):
                 )
                 self.assertEqual(record["step_run"], alignment_step_run)
             else:
-                self.assertEqual(record["derived_from"], ["/files/gex_737K-arc-v1.txt.gz/", alias])
+                self.assertEqual(record["derived_from"], ["/files/{}/".format(mock_stat().basename), alias])
                 self.assertEqual(record["step_run"], quantification_step_run)
 
             hidden = record.copy()
