@@ -14,7 +14,7 @@ from ..metadata import (
     compute_alignment_derived_from,
     compute_count_matrix_derived_from,
     compute_alignment_alias,
-    compute_inclusion_id,
+    compute_dcc_file_accession_from_url,
     generate_star_solo_processed_metadata,
     generate_star_solo_processed_sheet,
 )
@@ -91,13 +91,16 @@ class test_metadata(TestCase):
     def tearDown(self):
         logging.disable(logging.NOTSET)
 
-    def test_compute_inclusion_id(self):
-        inclusion_id = compute_inclusion_id(DEFAULT_INCLUSION)
+    def test_compute_dcc_file_accession_from_url(self):
+        inclusion_id = compute_dcc_file_accession_from_url(DEFAULT_INCLUSION)
         self.assertEqual(
             inclusion_id,
             "/files/{}/".format(DEFAULT_INCLUSION[DEFAULT_INCLUSION.rfind("/")+1:-len(".tar.gz")]))
 
-    def test_compute_alignment_derived_from(self):
+        second_pass = compute_dcc_file_accession_from_url(inclusion_id)
+        self.assertEqual(second_pass, inclusion_id)
+
+    def test_compute_alignment_derived_from_short_accession(self):
         read1 = ["ENCFF150FBF", "ENCFF385IAW"]
         read2 = ["ENCFF351VBS", "ENCFF503CCI"]
         # This is actually the bulk index not the single cell index
@@ -126,6 +129,37 @@ class test_metadata(TestCase):
         values = compute_alignment_derived_from(star_index, read1, read2)
         self.assertEqual(len(values), 5)
         self.assertEqual(values, expected_paired)
+
+    def test_compute_alignment_derived_from_full_accession(self):
+        read1 = ["ENCFF150FBF", "ENCFF385IAW"]
+        read2 = ["ENCFF351VBS", "ENCFF503CCI"]
+        # This is actually the bulk index not the single cell index
+        star_index = ["/files/ENCFF795ZFF/"]
+
+        expected_single = [
+            star_index[0],
+            "/files/{}/".format(read1[0]),
+            "/files/{}/".format(read1[1]),
+        ]
+
+        expected_paired = [
+            star_index[0],
+            "/files/{}/".format(read1[0]),
+            "/files/{}/".format(read2[0]),
+            "/files/{}/".format(read1[1]),
+            "/files/{}/".format(read2[1]),
+        ]
+
+        # single end
+        values = compute_alignment_derived_from(star_index, read1)
+        self.assertEqual(len(values), 3)
+        self.assertEqual(values, expected_single)
+
+        # paired end
+        values = compute_alignment_derived_from(star_index, read1, read2)
+        self.assertEqual(len(values), 5)
+        self.assertEqual(values, expected_paired)
+
 
     def test_compute_count_matrix_derived_from(self):
         datestamp = "2021-11-22"
