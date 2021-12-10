@@ -101,7 +101,7 @@ class test_metadata(TestCase):
         read1 = ["ENCFF150FBF", "ENCFF385IAW"]
         read2 = ["ENCFF351VBS", "ENCFF503CCI"]
         # This is actually the bulk index not the single cell index
-        star_index = [" ENCFF795ZFF"]
+        star_index = ["ENCFF795ZFF"]
 
         expected_single = [
             "/files/{}/".format(star_index[0]),
