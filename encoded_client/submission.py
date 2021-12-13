@@ -8,7 +8,7 @@ import pandas
 import subprocess
 import time
 
-from .encoded import ENCODED, DCCValidator
+from .encoded import ENCODED, DCCValidator, HTTPError
 from .sheet import open_book, save_book
 
 logger = logging.getLogger(__name__)
@@ -118,6 +118,34 @@ def post_file_metadata(encode, metadata, upload, retry=False):
                instead of posting a new object.
     """
     if not retry:
+        # was it already submitted?
+        md5 = metadata["md5sum"]
+        submitted = None
+        try:
+            submitted = encode.get_json("md5:{}".format(md5))
+            logger.info("Previous object found: {}".format(submitted["accession"]))
+            if submitted["status"] == "uploading":
+                creds = encode.get_json("{}/upload/".format(submitted["@id"]))
+                logger.info("Previous object has upload credentials: {}".format(submitted["accession"]))
+                if "@graph" in creds:
+                    creds = creds["@graph"]
+                if isinstance(creds, list) and len(creds) == 1:
+                    creds = creds[0]
+                    if creds["@id"] == submitted["@id"]:
+                        if "upload_credentials" in creds:
+                            submitted["upload_credentials"] = creds["upload_credentials"]
+                            with open(upload, "a") as outstream:
+                                json.dump(submitted, outstream, indent=4, sort_keys=True)
+                        return submitted
+                    else:
+                        logger.error("Credential id {} does not match object id {}".format(creds["@id"], submitted["@id"]))
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                pass
+            else:
+                print("{}".format(e))
+
+
         response = encode.post_json("/file", metadata)
         logger.info(json.dumps(response, indent=4, sort_keys=True))
         with open(upload, "w") as outstream:
