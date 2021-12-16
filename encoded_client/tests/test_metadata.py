@@ -20,7 +20,6 @@ from ..metadata import (
 )
 
 DEFAULT_INCLUSION = "https://www.encodeproject.org/files/gex_737K-arc-v1.txt.gz/@@download/gex_737K-arc-v1.txt.gz"
-DEFAULT_INCLUSION = "https://encd-6248-78c147870-qing.demo.encodedcc.org/files/737K-arc-v1(GEX)/@@download/737K-arc-v1(GEX).txt.gz"
 
 def mock_stat():
     class MockStatResult:
@@ -79,14 +78,11 @@ def get_processed_files1():
 
 class test_metadata(TestCase):
     def setUp(self):
-        sctest = "encd-6248-78c147870-qing.demo.encodedcc.org"
         production = "www.encodeproject.org"
-        self.encode = ENCODED(sctest)
+        self.encode = ENCODED(production)
         self.encode._user = get_test_dcc_user()
 
         logging.disable(logging.WARNING)
-        self.validator = DCCValidator(self.encode)
-        load_dcc_schemas(self.validator)
 
     def tearDown(self):
         logging.disable(logging.NOTSET)
@@ -166,7 +162,10 @@ class test_metadata(TestCase):
         alias = compute_alignment_alias("barbara-wold", "ENCLB002DZK", datestamp)
         self.assertEqual(alias, "barbara-wold:ENCLB002DZK_alignment_2021-11-22")
 
-        derived_from = compute_count_matrix_derived_from(DEFAULT_INCLUSION, alias)
+        config = {
+            "inclusion_list_url": DEFAULT_INCLUSION
+        }
+        derived_from = compute_count_matrix_derived_from(config, alias)
         self.assertEqual(len(derived_from), 2)
         self.assertEqual(derived_from, ["/files/{}/".format(mock_stat().basename), alias])
 
@@ -216,7 +215,11 @@ class test_metadata(TestCase):
 
             hidden = record.copy()
             del hidden["accession"]
-            self.validator.validate(hidden, "file")
+            with patch("encoded_client.encoded.DCCValidator.linkToValidator") as link_to:
+                validator = DCCValidator(self.encode)
+                load_dcc_schemas(validator)
+
+                validator.validate(hidden, "file")
 
     @patch("encoded_client.metadata.Path")
     @patch("encoded_client.metadata.make_md5sum", wraps=md5sum_string)
@@ -230,7 +233,11 @@ class test_metadata(TestCase):
             config, processed_files
         )
 
-        to_create = self.encode.post_sheet('/files/', metadata, dry_run=True, validator=self.validator)
-        self.assertEqual(len(to_create), 6)
-        for row in to_create:
-            self.assertEqual(row["accession"], "would create")
+        with patch("encoded_client.encoded.DCCValidator.linkToValidator") as link_to:
+            validator = DCCValidator(self.encode)
+            load_dcc_schemas(validator)
+
+            to_create = self.encode.post_sheet('/files/', metadata, dry_run=True, validator=validator)
+            self.assertEqual(len(to_create), 6)
+            for row in to_create:
+                self.assertEqual(row["accession"], "would create")
