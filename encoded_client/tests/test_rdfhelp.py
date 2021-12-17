@@ -4,6 +4,9 @@ import os
 from unittest import TestCase
 from datetime import datetime
 import six
+import pytest
+
+pytest.importorskip("rdflib")
 
 from rdflib import ConjunctiveGraph, Literal, Namespace, URIRef, Graph
 
