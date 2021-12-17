@@ -1,6 +1,7 @@
 from unittest import TestCase
 import pandas
 import tempfile
+import pytest
 
 from ..sheet import (
     open_book,
@@ -10,6 +11,7 @@ from ..sheet import (
 
 class TestSheet(TestCase):
     def test_spreadsheet_wrappers(self):
+        pytest.importorskip("openpyxl")
         sheet = pandas.DataFrame({
             "uuid": ["fee130b0-aed1-4889-8703-4a520b70fc79", None, None],
             "accession": ["ENCSR000AEC", None, None],

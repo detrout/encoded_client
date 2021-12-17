@@ -1,6 +1,7 @@
 import pandas
 import tempfile
 from unittest import TestCase
+import pytest
 
 from ..encoded import ENCODED
 from ..submission import process_files, main
@@ -40,6 +41,7 @@ class TestSubmission(TestCase):
         self.assertEqual(self.example_files.iloc[0]["accession"], "would create")
 
     def test_sumission_main(self):
+        pytest.importorskip("openpyxl")
         with tempfile.NamedTemporaryFile(suffix="_encoded.xlsx") as out:
             self.example_files.to_excel(out, sheet_name="File", index=False)
 
