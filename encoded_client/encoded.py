@@ -323,6 +323,10 @@ class ENCODED:
             arguments["stream"] = kwargs["stream"]
             del kwargs["stream"]
 
+        if "headers" in kwargs:
+            arguments["headers"] = kwargs["headers"]
+            del kwargs["headers"]
+
         response = self._session.get(
             url, params=kwargs, **arguments
         )
