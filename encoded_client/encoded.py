@@ -281,6 +281,8 @@ class ENCODED:
         if len(kwargs) == 0:
             kwargs["limit"] = "all"
 
+        kwargs["headers"] = self.json_headers
+
         response = self.get_response(obj_id, **kwargs)
         data = response.json()
         response.close()
@@ -322,7 +324,7 @@ class ENCODED:
             del kwargs["stream"]
 
         response = self._session.get(
-            url, headers=self.json_headers, params=kwargs, **arguments
+            url, params=kwargs, **arguments
         )
         if not response.status_code == requests.codes.ok:
             LOGGER.warning(
