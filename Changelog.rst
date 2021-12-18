@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.1.1
+-----
+
+Fixes to setup.cfg to improve pypi landing page.
+
 0.1.0
 -----
 
