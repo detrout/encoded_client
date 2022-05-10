@@ -119,6 +119,23 @@ COLLECTION_TO_TYPE = {
 TYPE_TO_COLLECTION = {COLLECTION_TO_TYPE[k]: k for k in COLLECTION_TO_TYPE}
 
 
+document_mime_type_default = {
+    ".pdf": "application/pdf",
+    ".tar": "application/x-tar",
+    ".json": "application/json",
+    ".gif": "image/gif",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".tif": "image/tiff",
+    ".tiff": "image/tiff",
+    ".html": "text/html",
+    ".txt": "text/plain",
+    ".tsv": "text/tab-separated-values",
+    ".yaml": "text/plain",  # not actually true, but it's what's supported
+}
+
+
 class DuplicateAliasError(jsonschema.ValidationError):
     pass
 
@@ -979,7 +996,7 @@ class Document(object):
     lab = "/labs/barbara-wold"
 
     def __init__(self, url, document_type, description, aliases=None):
-        self.url = url
+        self.url = Path(url)
         self.filename = os.path.basename(url)
         self.document_type = document_type
         self.description = description
@@ -1000,12 +1017,13 @@ class Document(object):
         self.get_document()
 
     def get_document(self):
-        if os.path.exists(self.url):
+        if self.url.exists():
             with open(self.url, "rb") as instream:
-                if self.url.endswith("pdf"):
-                    self.content_type = "application/pdf"
+                if self.url.suffix in document_mime_type_default:
+                    self.content_type = document_mime_type_default[self.url.suffix]
                 else:
-                    LOGGER.warn("Submitting non-pdfs is execptional")
+                    raise ValueError(
+                        "Unrecognized filename extension {}".format(self.url.suffix))
                 self.document = instream.read()
                 self.md5sum = hashlib.md5(self.document)
         else:
@@ -1348,26 +1366,10 @@ QUALITY_METRIC_PARSERS = {
     "GeneQuantificationQualityMetric": parse_genes_detected,
 }
 
-
 def make_attachment(filename, mime_type=None):
-    mime_type_default = {
-        ".pdf": "application/pdf",
-        ".tar": "application/x-tar",
-        ".json": "application/json",
-        ".gif": "image/gif",
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".png": "image/png",
-        ".tif": "image/tiff",
-        ".tiff": "image/tiff",
-        ".html": "text/html",
-        ".txt": "text/plain",
-        ".tsv": "text/tab-separated-values"
-    }
-
     filename = Path(filename)
     if mime_type is None:
-        mime_type = mime_type_default[filename.suffix]
+        mime_type = document_mime_type_default[filename.suffix]
         if mime_type is None:
             raise ValueError("Unrecognized filename extension")
 
