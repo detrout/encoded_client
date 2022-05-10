@@ -6,12 +6,26 @@ import json
 import os
 import pandas
 import subprocess
+import sys
 import time
 
 from .encoded import ENCODED, DCCValidator, HTTPError
 from .sheet import open_book, save_book
 
 logger = logging.getLogger(__name__)
+
+
+def check_aws(dry_run):
+    try:
+        subprocess.check_call(
+            ["aws", "s3", "help"],
+            stdout=subprocess.DEVNULL)
+    except FileNotFoundError:
+        logger.error("Unable to find aws command")
+        sys.exit(1)
+    except subprocess.CalledProcessError as e:
+        logger.error("aws command doesn't support s3 argument. {}".format(e))
+        sys.exit(1)
 
 
 def run_aws_cp(pathname, creds):
@@ -202,6 +216,8 @@ def main(cmdline=None):
     logging.info('Spreadsheet: %s', args.spreadsheet_file)
     server = ENCODED(args.server)
     server.load_netrc()
+
+    check_aws(args.dry_run)
 
     book = open_book(args.spreadsheet_file)
     files = book.parse(args.sheet_name, header=0)
