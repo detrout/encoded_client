@@ -178,7 +178,11 @@ def load_into_model(model, parser_name, path, ns=None):
     url = urllib.parse.urlunparse(url_parts)
     logger.info("Opening {0} with parser {1}".format(url, parser_name))
 
-    model.parse(url, format=parser_name, publicID=ns)
+    kwargs = {}
+    if parser_name == "rdfa":
+        kwargs["media_type"] = "text/html"
+
+    model.parse(url, format=parser_name, publicID=ns, **kwargs)
 
 
 def load_string_into_model(model, parser_name, data, ns=None):
