@@ -15,6 +15,7 @@ from ..encoded import (
     DuplicateAliasError,
     get_object_type,
     typed_column_parser,
+    LOGGER,
 )
 
 
@@ -164,8 +165,15 @@ class TestEncoded(TestCase):
         bio["organism"] = "/organisms/mouse/"
 
         bio["lab"] = "/labs/alkes-price/"
-        self.assertRaises(
-            jsonschema.ValidationError, self.validator.validate, bio, "biosample"
+        with self.assertLogs(LOGGER) as cm:
+            self.validator.validate(bio, "biosample")
+
+        self.assertEqual(
+            cm.output,
+            [
+                "ERROR:encoded_client.encoded:/labs/alkes-price/ is not a lab in user "
+                "Diane Trout can submits_for"
+            ],
         )
         bio["lab"] = "/labs/barbara-wold"
 
