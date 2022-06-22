@@ -21,10 +21,10 @@ from ..encoded import (
 
 def load_dcc_schemas(validator):
     for schema, filename in [
-            ("file", "file.json"),
-            ("library", "library.json"),
-            ("biosample", "biosample.json"),
-            ("star_solo_quality_metric", "star_solo_quality_metric.json"),
+        ("file", "file.json"),
+        ("library", "library.json"),
+        ("biosample", "biosample.json"),
+        ("star_solo_quality_metric", "star_solo_quality_metric.json"),
     ]:
         schema_file = os.path.join(os.path.dirname(__file__), filename)
         with open(schema_file, "rt") as instream:
@@ -92,41 +92,41 @@ class TestEncoded(TestCase):
     def test_validate_library(self):
         """Test validation of a Library object"""
         obj = {
-            u"aliases": [],
-            u"alternate_accessions": [],
-            u"award": u"/awards/U54HG006998/",
-            u"biosample": u"/biosamples/ENCBS089RNA/",
-            u"date_created": u"2014-01-14T19:44:51.061770+00:00",
-            u"documents": [],
-            u"extraction_method": u"Ambion mirVana",
-            u"fragmentation_methods": [u"chemical (Nextera tagmentation)"],
-            u"lab": u"/labs/barbara-wold/",
-            u"library_size_selection_method": u"SPRI beads",
-            u"lysis_method": u"Clontech UltraLow for Illumina sequencing",
-            u"nucleic_acid_term_name": u"polyadenylated mRNA",
-            u"size_range": u">200",
-            u"status": u"released",
-            u"strand_specificity": "unstranded",
-            u"treatments": [],
+            "aliases": [],
+            "alternate_accessions": [],
+            "award": "/awards/U54HG006998/",
+            "biosample": "/biosamples/ENCBS089RNA/",
+            "date_created": "2014-01-14T19:44:51.061770+00:00",
+            "documents": [],
+            "extraction_method": "Ambion mirVana",
+            "fragmentation_methods": ["chemical (Nextera tagmentation)"],
+            "lab": "/labs/barbara-wold/",
+            "library_size_selection_method": "SPRI beads",
+            "lysis_method": "Clontech UltraLow for Illumina sequencing",
+            "nucleic_acid_term_name": "polyadenylated mRNA",
+            "size_range": ">200",
+            "status": "released",
+            "strand_specificity": "unstranded",
+            "treatments": [],
         }
         self.validator.validate(obj, "library")
 
         # test requestMethod
-        obj["schema_version"] = u"2"
+        obj["schema_version"] = "2"
         self.assertRaises(
             jsonschema.ValidationError, self.validator.validate, obj, "library"
         )
         del obj["schema_version"]
 
         # test calculatedProperty
-        obj["nucleic_acid_term_name"] = u"SO:0000871"
+        obj["nucleic_acid_term_name"] = "SO:0000871"
         self.assertRaises(
             jsonschema.ValidationError, self.validator.validate, obj, "library"
         )
         del obj["nucleic_acid_term_name"]
 
         # test permssionValidator
-        obj["uuid"] = u"42c46028-708f-4347-a3df-2c82dfb021c4"
+        obj["uuid"] = "42c46028-708f-4347-a3df-2c82dfb021c4"
         self.assertRaises(
             jsonschema.ValidationError, self.validator.validate, obj, "library"
         )
@@ -313,36 +313,36 @@ class TestEncoded(TestCase):
             "facets": [],
             "@graph": [
                 {
-                    u"@id": u"/biosamples/ENCBS125ENC/",
-                    u"@type": [u"Biosample", u"Item"],
-                    u"accession": u"ENCBS125ENC",
-                    u"award.rfa": u"ENCODE2-Mouse",
-                    u"biosample_term_name": u"myocyte",
-                    u"biosample_type": u"in vitro differentiated cells",
-                    u"characterizations.length": [],
-                    u"constructs.length": [],
-                    u"lab.title": u"Barbara Wold, Caltech",
-                    u"life_stage": u"unknown",
-                    u"organism.name": u"mouse",
-                    u"source.title": u"Barbara Wold",
-                    u"status": u"CURRENT",
-                    u"treatments.length": [],
+                    "@id": "/biosamples/ENCBS125ENC/",
+                    "@type": ["Biosample", "Item"],
+                    "accession": "ENCBS125ENC",
+                    "award.rfa": "ENCODE2-Mouse",
+                    "biosample_term_name": "myocyte",
+                    "biosample_type": "in vitro differentiated cells",
+                    "characterizations.length": [],
+                    "constructs.length": [],
+                    "lab.title": "Barbara Wold, Caltech",
+                    "life_stage": "unknown",
+                    "organism.name": "mouse",
+                    "source.title": "Barbara Wold",
+                    "status": "CURRENT",
+                    "treatments.length": [],
                 },
                 {
-                    u"@id": u"/biosamples/ENCBS126ENC/",
-                    u"@type": [u"Biosample", u"Item"],
-                    u"accession": u"ENCBS126ENC",
-                    u"award.rfa": u"ENCODE2-Mouse",
-                    u"biosample_term_name": u"myocyte",
-                    u"biosample_type": u"in vitro differentiated cells",
-                    u"characterizations.length": [],
-                    u"constructs.length": [],
-                    u"lab.title": u"Barbara Wold, Caltech",
-                    u"life_stage": u"unknown",
-                    u"organism.name": u"mouse",
-                    u"source.title": u"Barbara Wold",
-                    u"status": u"CURRENT",
-                    u"treatments.length": [],
+                    "@id": "/biosamples/ENCBS126ENC/",
+                    "@type": ["Biosample", "Item"],
+                    "accession": "ENCBS126ENC",
+                    "award.rfa": "ENCODE2-Mouse",
+                    "biosample_term_name": "myocyte",
+                    "biosample_type": "in vitro differentiated cells",
+                    "characterizations.length": [],
+                    "constructs.length": [],
+                    "lab.title": "Barbara Wold, Caltech",
+                    "life_stage": "unknown",
+                    "organism.name": "mouse",
+                    "source.title": "Barbara Wold",
+                    "status": "CURRENT",
+                    "treatments.length": [],
                 },
             ],
         }
@@ -447,23 +447,27 @@ class TestEncodeExperiment(TestCase):
         e = server.get_experiment("/experiments/ENCSR000AEH/")
         self.assertIsNot(e._json, None)
         self.assertEqual(e.assay_term_name, "polyA plus RNA-seq")
-        self.assertEqual(e.description, "RNA Evaluation Gm12878 Long Poly-A+ RNA-seq from Wold")
+        self.assertEqual(
+            e.description, "RNA Evaluation Gm12878 Long Poly-A+ RNA-seq from Wold"
+        )
 
         replicates = list(e.replicates)
         self.assertEqual(len(replicates), 2)
 
         replicate_files = {}
         file_formats_expected = set(["tsv", "fastq", "bam", "bigWig"])
-        output_types_expected = set([
-            'reads',
-            'signal of all reads',
-            'signal of unique reads',
-            'transcriptome alignments',
-            'transcript quantifications',
-            'gene quantifications',
-            'alignments',
-            'signal',
-        ])
+        output_types_expected = set(
+            [
+                "reads",
+                "signal of all reads",
+                "signal of unique reads",
+                "transcriptome alignments",
+                "transcript quantifications",
+                "gene quantifications",
+                "alignments",
+                "signal",
+            ]
+        )
         library_aliases_expected = set(["barbara-wold:13713", "barbara-wold:13714"])
         library_aliases_seen = set()
         for i, r in enumerate(replicates):
@@ -485,11 +489,12 @@ class TestEncodeExperiment(TestCase):
 
             self.assertGreaterEqual(len(qc_seen), 4)
             expected = {
-                'GeneQuantificationQualityMetric',
-                'SamtoolsFlagstatsQualityMetric',
-                'MadQualityMetric',
-                'GeneTypeQuantificationQualityMetric',
-                'StarQualityMetric'}
+                "GeneQuantificationQualityMetric",
+                "SamtoolsFlagstatsQualityMetric",
+                "MadQualityMetric",
+                "GeneTypeQuantificationQualityMetric",
+                "StarQualityMetric",
+            }
             for e in expected:
                 self.assertIn(e, qc_types_seen)
 
@@ -498,8 +503,8 @@ class TestEncodeExperiment(TestCase):
         self.assertEqual(output_types_expected, output_types_seen)
 
         self.assertEqual(
-            len(set(replicate_files[0]).intersection(replicate_files[1])),
-            0)
+            len(set(replicate_files[0]).intersection(replicate_files[1])), 0
+        )
 
 
 if __name__ == "__main__":
