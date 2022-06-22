@@ -858,14 +858,19 @@ class DCCValidator:
 
         if schema.get("linkSubmitsFor"):
             if self._server.user is not None:
+                user = self._server.user
                 submits_for = [
-                    self.get_json(s) for s in self._server.user.get("submits_for")
+                    self.get_json(s) for s in user.get("submits_for")
                 ]
                 if submits_for is not None and not any(
                     lab["uuid"] == item["uuid"] for lab in submits_for
                 ):
-                    error = "{} is not a lab in user {} can submits_for".format(instance, self._server.user['title'])
-                    print(error)
+                    name = "{} {}".format(
+                        user.get("first_name", "Unknown"),
+                        user.get("last_name", "User"))
+                    error = "{} is not a lab in user {} can submits_for".format(
+                        instance, name)
+                    LOGGER.error(error)
                     return
 
     def permissionValidator(self, validator, permission, instance, schema):
