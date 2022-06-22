@@ -14,7 +14,8 @@ def open_book(spreadsheet_file, force_extension=None):
 
     engine = {
         ".ods": "odf",
-        ".xlsx": "xlrd",
+        ".xls": "xlrd",
+        ".xlsx": "openpyxl",
     }[extension]
 
     book = pandas.ExcelFile(spreadsheet_file, engine=engine)
