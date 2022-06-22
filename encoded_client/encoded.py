@@ -864,8 +864,8 @@ class DCCValidator:
                 if submits_for is not None and not any(
                     lab["uuid"] == item["uuid"] for lab in submits_for
                 ):
-                    error = "%r is not in user submits_for" % instance
-                    yield jsonschema.ValidationError(error)
+                    error = "{} is not a lab in user {} can submits_for".format(instance, self._server.user['title'])
+                    print(error)
                     return
 
     def permissionValidator(self, validator, permission, instance, schema):
