@@ -20,7 +20,12 @@ from requests import HTTPError
 from uuid import UUID
 
 import six
-from urllib.parse import urljoin, urlparse, urlunparse
+from urllib.parse import (
+    quote_plus,
+    urljoin,
+    urlparse,
+    urlunparse
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -1000,9 +1005,12 @@ class Document:
     award = "U54HG006998"
     lab = "/labs/barbara-wold"
 
-    def __init__(self, url, document_type, description, aliases=None):
+    def __init__(self, url, document_type, description, aliases=None, filename=None):
         self.url = Path(url)
-        self.filename = os.path.basename(url)
+        if filename is None:
+            self.filename = os.path.basename(url)
+        else:
+            self.filename = filename
         self.document_type = document_type
         self.description = description
 
@@ -1041,7 +1049,11 @@ class Document:
 
     def create_payload(self):
         document_payload = {
-            "attachment": make_attachment(self.filename, mime_type=self.content_type),
+            "attachment": make_attachment(
+                self.url,
+                mime_type=self.content_type,
+                remote_filename=self.filename,
+            ),
             "document_type": self.document_type,
             "description": self.description,
             "award": self.award,
@@ -1371,19 +1383,22 @@ QUALITY_METRIC_PARSERS = {
     "GeneQuantificationQualityMetric": parse_genes_detected,
 }
 
-def make_attachment(filename, mime_type=None):
-    filename = Path(filename)
+
+def make_attachment(local_filename, mime_type=None, remote_filename=None):
+    local_filename = Path(local_filename)
     if mime_type is None:
         mime_type = document_mime_type_default[filename.suffix]
         if mime_type is None:
             raise ValueError("Unrecognized filename extension")
 
-    with open(filename, "rb") as instream:
+    with open(local_filename, "rb") as instream:
         document = instream.read()
 
-    short_name = filename.name
+    if remote_filename is None:
+        remote_filename = local_filename.name
+
     payload = {
-        'download': str(short_name),
+        'download': quote_plus(str(remote_filename)),
         'type': mime_type,
         'href': 'data:{};base64,'.format(mime_type) +
                 base64.b64encode(document).decode("ascii"),
