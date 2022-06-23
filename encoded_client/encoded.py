@@ -988,7 +988,7 @@ class TypedColumnParser(object):
 typed_column_parser = TypedColumnParser()
 
 
-class Document(object):
+class Document:
     """Helper class for registering documents
 
     Usage:
