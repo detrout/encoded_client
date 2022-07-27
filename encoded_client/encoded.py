@@ -1005,7 +1005,9 @@ class Document:
     award = "U54HG006998"
     lab = "/labs/barbara-wold"
 
-    def __init__(self, url, document_type, description, aliases=None, filename=None):
+    def __init__(self, url, document_type, description, aliases=None, filename=None, server=None):
+        assert server is None or isinstance(server, ENCODED)
+
         self.url = Path(url)
         if filename is None:
             self.filename = os.path.basename(url)
@@ -1027,9 +1029,10 @@ class Document:
         self.urls = None
         self.uuid = None
 
-        self.get_document()
+        self.get_document(server)
 
-    def get_document(self):
+    def get_document(self, server=None):
+        parsed_url = urlparse(str(self.url))
         if self.url.exists():
             with open(self.url, "rb") as instream:
                 if self.url.suffix in document_mime_type_default:
@@ -1039,13 +1042,15 @@ class Document:
                         "Unrecognized filename extension {}".format(self.url.suffix))
                 self.document = instream.read()
                 self.md5sum = hashlib.md5(self.document)
-        else:
-            req = self._session.get(self.url)
+        elif server is not None and parsed_url.scheme in ("http", "https"):
+            req = server._session.get(self.url)
             if req.status_code == 200:
                 self.content_type = req.headers["content-type"]
                 self.document = req.content
                 self.md5sum = hashlib.md5(self.document)
                 self.urls = [self.url]
+        else:
+            raise ValueError("Unable to retrieve document {}".format(self.url))
 
     def create_payload(self):
         document_payload = {
