@@ -1382,6 +1382,42 @@ def parse_genes_detected(record):
     }
     return parse_metric(record, columns)
 
+def parse_star_solo_quality_metric(record):
+    # mode controls some attributes
+    columns = {
+        'barcode_rank_plot': str,
+        'estimated_number_of_cells': int,
+        'fraction_of_unique_reads_in_cells': float,
+        'mean_UMI_per_cell': int,
+        'mean_genefull_ex50pas_per_cell': int,
+        'mean_reads_per_cell': int,
+        'median_UMI_per_cell': int,
+        'median_genefull_ex50pas_per_cell': int,
+        'median_reads_per_cell': int,
+        'number_of_reads': int,
+        'q30_bases_in_CB_UMI': float,
+        'q30_bases_in_rna_read': float,
+        'reads_mapped_to_genefull_ex50pas_unique_and_multiple_gene_ex50pas': float,
+        'reads_mapped_to_genefull_ex50pas_unique_genefull_ex50pas': float,
+        'reads_mapped_to_genome_unique': float,
+        'reads_mapped_to_genome_unique_and_multiple': float,
+        'reads_with_valid_barcodes': float,
+        'sequencing_saturation': float,
+        'total_genefull_ex50pas_detected': int,
+        'umis_in_cells': int,
+        'unique_reads_in_cells_mapped_to_genefull_ex50pas': int,
+    }
+    return parse_metric(record, columns)
+
+
+def parse_scrna_seq_counts_summary(record):
+    columns = {
+        'counts_violin_plot': str,
+        'total_counts_vs_genes_by_count': str,
+        'total_counts_vs_pct_mitochondria': str,
+    }
+    return parse_metric(record, columns)
+
 
 QUALITY_METRIC_PARSERS = {
     "SamtoolsFlagstatsQualityMetric": parse_samtools_stats,
@@ -1389,6 +1425,8 @@ QUALITY_METRIC_PARSERS = {
     "GeneTypeQuantificationQualityMetric": parse_gene_type_quantification,
     "MadQualityMetric": parse_mad_metric,
     "GeneQuantificationQualityMetric": parse_genes_detected,
+    "StarSoloQualityMetric": parse_star_solo_quality_metric,
+    "ScrnaSeqCountsSummaryQualityMetric": parse_scrna_seq_counts_summary,
 }
 
 
