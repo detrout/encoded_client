@@ -4,5 +4,6 @@ __pycache__/
 .coverage
 .tox/
 *.egg-info/
+dist/
 docs/_build/
 encoded_client/_version.py
