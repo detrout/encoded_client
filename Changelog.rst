@@ -1,6 +1,21 @@
 Changelog
 =========
 
+0.2.0
+-----
+
+- Fix RDFa parsing when used with more recent rdflib.
+- Support posting documents with mime types other than text/pdf
+- Verify that aws command is available before posting metadata.
+- Downgrade not a submitter to a warning, instead of an error.
+  (Because of validating using records submitted by others)
+- Remove xlrd dependency in favor of openpyxl to read current xlsx files.
+- When submitting documents quote any path seperators since the DCC requires
+  document names to be in a flat hierarchy.
+- Add a server paremeter to Document class for validation.
+- Implement qc metric parsers for star solo and scRNAseq quality
+  control metrics
+
 0.1.1
 -----
 
