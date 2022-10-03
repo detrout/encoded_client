@@ -1244,6 +1244,9 @@ class EncodeFile(Mapping):
 
         for metric in self._json["quality_metrics"]:
             metric_type = get_object_type(metric)
+            if metric_type not in QUALITY_METRIC_PARSERS:
+                raise RuntimeError("Need to implement parser for {}".format(metric_type))
+
             parser = QUALITY_METRIC_PARSERS[metric_type]
             value = parser(metric)
             yield value
