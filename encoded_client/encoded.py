@@ -300,9 +300,6 @@ class ENCODED:
           embed - (bool) if true expands linking ids into their associated object.
           format - text/html or application/json
         """
-        if len(kwargs) == 0:
-            kwargs["limit"] = "all"
-
         kwargs["headers"] = self.json_headers
 
         response = self.get_response(obj_id, **kwargs)
@@ -620,7 +617,16 @@ class ENCODED:
 
         to do a general search do
             searchTerm=term
+
+        Known keywords allowed on search:
+          limit - (integer or 'all') how many records to return, all for all of them
+             to be kinder to the server, set an arbitrary limit of 5,000. override
+             with all if all is really needed
+          type - object type
         """
+        if len(kwargs) == 0:
+            kwargs["limit"] = "5000"
+
         url = self.prepare_url("/search/")
         result = self.get_json(url, **kwargs)
         self.convert_search_to_jsonld(result)
