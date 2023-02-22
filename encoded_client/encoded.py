@@ -1102,6 +1102,33 @@ class Document:
             return server.get_json(uuid, embed=False)
 
 
+class EncodeFileCache(Mapping):
+    def __init__(self, server, dataset, json=None):
+        self._server = server
+        self._dataset = dataset
+        self._file_cache = []
+
+    def _update_json(self, json):
+        for obj in json:
+            assert obj.get("@type") == ["File", "Item"]
+            assert obj.get("dataset") == self._dataset
+            self._file_cache[obj["@id"]] = obj
+
+    def __getitem__(self, key):
+        if key not in self._file_cache:
+            obj = self._server.get_json(key)
+            self._update_json([obj])
+
+        return self._file_cache[key]
+
+    def __iter__(self):
+        for key in self._file_cache:
+            yield key
+
+    def __len__(self):
+        return len(self._file_cache)
+
+
 class EncodeExperiment(Mapping):
     """Helper class for accessing ENCODED experiment objects"""
 
@@ -1112,6 +1139,8 @@ class EncodeExperiment(Mapping):
         self._schema_version_check()
         self._replicate_file_map = {}
         if self._json is not None:
+            self._files = EncodeFileCache(
+                self._server, self._json["@id"], self._json["files"])
             self._calculate_derived_from()
 
     def _schema_version_check(self):
@@ -1131,22 +1160,29 @@ class EncodeExperiment(Mapping):
 
         file_replicate_map = {}
 
+        # this finds replicate information attached to read files
         our_files = set((f["@id"] for f in self._json["files"]))
         for f in self._json["files"]:
             if "replicate" in f:
                 file_replicate_map[f["@id"]] = f["replicate"]["@id"]
 
         derived_map = {}
-        for f in self._json["files"]:
+        #for f in self._json["files"]:
+        for file_id in self.analyses[0]["files"]:
+            f = self._server.get_json(file_id)
             for derived_from in f.get("derived_from", []):
+                analyses = [x["@id"] for x in f.get("analyses", [])]
+                print(f["accession"], f.get("output_type"), derived_from, analyses)
                 if derived_from in our_files:
                     derived_map[f["@id"]] = derived_from
 
+        print("Derived map", derived_map)
         for derived_file in derived_map:
             file_replicate_map[derived_file] = find_source_replicate(
                 derived_map, derived_file, file_replicate_map
             )
 
+        print("Replicate map", file_replicate_map)
         self._replicate_file_map = {}
         for file_id in file_replicate_map:
             self._replicate_file_map.setdefault(file_replicate_map[file_id], []).append(
@@ -1201,13 +1237,20 @@ class EncodeReplicate(Mapping):
     @property
     def files(self):
         if self._json["@id"] not in self._experiment._replicate_file_map:
-            return
+            print("id not in", self._json["@id"])
+            return []
 
         file_ids = self._experiment._replicate_file_map[self._json["@id"]]
-        if len(self._files) != len(file_ids):
-            for f in self._experiment["files"]:
-                if f["@id"] in file_ids:
-                    self._files.append(EncodeFile(f, self))
+        print("files file_ids", file_ids, len(self._files), len(file_ids))
+        for file_id in file_ids:
+            f = self._experiment._server.get_json(file_id)
+            print("dataset?", f["dataset"], self._experiment["accession"])
+            self._files.append(EncodeFile(f, self))
+        print(len(self._files))
+        #if len(self._files) != len(file_ids):
+        #    for f in self._experiment["files"]:
+        #        if f["@id"] in file_ids:
+        #            self._files.append(EncodeFile(f, self))
 
         return self._files
 
