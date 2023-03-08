@@ -388,6 +388,7 @@ class ENCODED:
         collection_to_accession_name = {
             "/annotations/": "accession",
             "/biosamples/": "accession",
+            "/documents/": "uuid",
             "/experiments/": "accession",
             "/files/": "accession",
             "/libraries/": "accession",
