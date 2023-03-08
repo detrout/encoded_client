@@ -1125,6 +1125,7 @@ class EncodeExperiment(Mapping):
             )
 
         file_replicate_map = {}
+
         our_files = set((f["@id"] for f in self._json["files"]))
         for f in self._json["files"]:
             if "replicate" in f:
