@@ -205,12 +205,21 @@ def main(cmdline=None):
     parser.add_argument(
         '-t',
         '--sheet-name',
-        default='File',
+        default=None,
         help='Override default file sheet name'
     )
+
     parser.add_argument('-o', '--output-file', help='Write sheet progress')
     parser.add_argument('-n', '--dry-run', action='store_true', default=False)
     args = parser.parse_args(cmdline)
+
+    if args.sheet_name is None:
+        if args.server.endswith("igvf.org"):
+            args.sheet_name = "sequence_data"
+        elif args.server.endswith("encode.org"):
+            args.sheet_name = "File"
+        elif args.server.endswith("encodedcc.org"):
+            args.sheet_name = "File"
 
     logging.basicConfig(level=logging.INFO)
 
