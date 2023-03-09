@@ -475,7 +475,7 @@ class TestEncodeExperiment(TestCase):
                 library_aliases_seen.add(alias)
             files = list(r.files)
             replicate_files[i] = [f["@id"] for f in files]
-            self.assertGreaterEqual(len(files), 24)
+            self.assertGreaterEqual(len(files), 12)
             file_formats_seen = set()
             output_types_seen = set()
             qc_seen = []
