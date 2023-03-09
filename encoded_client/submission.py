@@ -191,6 +191,8 @@ def main(cmdline=None):
         choices=[
             'www.encodeproject.org',
             'test.encodedcc.org',
+            'api.sandbox.igvf.org',
+            'api.data.igvf.org'
         ],
         help='DCC Server to upload to'
     )
