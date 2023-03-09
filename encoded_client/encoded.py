@@ -392,8 +392,12 @@ class ENCODED:
             "/experiments/": "accession",
             "/files/": "accession",
             "/libraries/": "accession",
+            "measurement_set": "accession",
             "/mouse-donors/": "accession",
             "/replicates/": "uuid",
+            "rodent_donor": "accession",
+            "sequence_data": "accession",
+            "tissue": "accession",
         }
 
         accession_name = collection_to_accession_name.get(collection, None)
