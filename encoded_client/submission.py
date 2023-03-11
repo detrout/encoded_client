@@ -50,23 +50,24 @@ def run_aws_cp(pathname, creds):
         logger.info("Upload of %s finished in %.2f seconds", pathname, end - start)
 
 
-def process_files(server, files, dry_run):
+def process_files(server, end_point, files, dry_run):
     """Validate sheet and then upload files
     """
     logger.info('Validating metadata')
     validator = DCCValidator(server=server)
 
     logger.info('Uploading files')
-    return upload(server, validator, files, dry_run=dry_run)
+    return upload(server, end_point, validator, files, dry_run=dry_run)
 
 
-def upload(server, validator, files, dry_run=True, retry=False):
+def upload(server, end_point, validator, files, dry_run=True, retry=False):
     created = []
-    to_create = server.prepare_objects_from_sheet('/files/', files, validator=validator)
+    to_create = server.prepare_objects_from_sheet(end_point, files, validator=validator)
     for i, new_object in to_create:
         if new_object is not None and pandas.isnull(new_object.get('accession')):
             logger.debug('Would upload {}'.format(new_object['submitted_file_name']))
-            posted_object = upload_file(server, validator, new_object, dry_run, retry)
+            posted_object = upload_file(
+                server, end_point, validator, new_object, dry_run, retry)
             created.append(posted_object)
 
             if posted_object:
@@ -81,7 +82,7 @@ def upload(server, validator, files, dry_run=True, retry=False):
     return created
 
 
-def upload_file(encode, validator, metadata, dry_run=True, retry=False):
+def upload_file(encode, end_point, validator, metadata, dry_run=True, retry=False):
     """Upload a file to the DCC
 
     :Parameters:
@@ -93,7 +94,7 @@ def upload_file(encode, validator, metadata, dry_run=True, retry=False):
     if not isinstance(validator, DCCValidator):
         raise RuntimeError("arguments to upload_file changed")
 
-    validator.validate(metadata, "file")
+    validator.validate(metadata, end_point)
 
     file_name_fields = ["submitted_file_name", "pathname:skip", "pathname"]
     file_name_field = None
@@ -110,7 +111,7 @@ def upload_file(encode, validator, metadata, dry_run=True, retry=False):
     if retry or not os.path.exists(upload):
         logger.debug(json.dumps(metadata, indent=4, sort_keys=True))
         if not dry_run:
-            item = post_file_metadata(encode, metadata, upload, retry)
+            item = post_file_metadata(encode, end_point, metadata, upload, retry)
             creds = item["upload_credentials"]
             run_aws_cp(metadata[file_name_field], creds)
             return item
@@ -122,7 +123,7 @@ def upload_file(encode, validator, metadata, dry_run=True, retry=False):
         logger.info("%s already uploaded", metadata[file_name_field])
 
 
-def post_file_metadata(encode, metadata, upload, retry=False):
+def post_file_metadata(encode, end_point, metadata, upload, retry=False):
     """Post file metadata to ENCODE server
 
     :Paramters:
@@ -160,7 +161,7 @@ def post_file_metadata(encode, metadata, upload, retry=False):
                 print("{}".format(e))
 
 
-        response = encode.post_json("/file", metadata)
+        response = encode.post_json(end_point, metadata)
         logger.info(json.dumps(response, indent=4, sort_keys=True))
         with open(upload, "w") as outstream:
             json.dump(response, outstream, indent=4, sort_keys=True)
@@ -197,6 +198,17 @@ def main(cmdline=None):
         help='DCC Server to upload to'
     )
     parser.add_argument(
+        '-e',
+        '--end-point',
+        choices=[
+            'file',
+            'reference_data',
+            'sequence_data',
+        ],
+        required=True,
+        help='Name of end-point to be submitting to',
+    )
+    parser.add_argument(
         '-f',
         '--spreadsheet-file',
         required=True,
@@ -214,14 +226,12 @@ def main(cmdline=None):
     args = parser.parse_args(cmdline)
 
     if args.sheet_name is None:
-        if args.server.endswith("igvf.org"):
-            args.sheet_name = "sequence_data"
-        elif args.server.endswith("encode.org"):
+        if args.end_point == "file":
             args.sheet_name = "File"
-        elif args.server.endswith("encodedcc.org"):
-            args.sheet_name = "File"
+        else:
+            args.sheet_name = args.end_point
 
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     logging.info('Server: %s', args.server)
     logging.info('Spreadsheet: %s', args.spreadsheet_file)
@@ -233,12 +243,12 @@ def main(cmdline=None):
     book = open_book(args.spreadsheet_file)
     files = book.parse(args.sheet_name, header=0)
     try:
-        process_files(server, files, args.dry_run)
+        process_files(server, args.end_point, files, args.dry_run)
     except Exception as e:
         logger.error(e)
 
     if args.output_file:
-        save_book(args.output_file, book, {'File': files})
+        save_book(args.output_file, book, {args.sheet_name: files})
 
 
 if __name__ == "__main__":
