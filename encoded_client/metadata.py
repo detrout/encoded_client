@@ -210,12 +210,12 @@ def generate_star_solo_subpool_metadata(config, records, library_id=None):
             derived_from = compute_alignment_derived_from(
                 config["genome_accession"], library["read1"], library["read2"]
             )
+            matrix_alias = None
         elif file_type == "tar":
             derived_from = compute_count_matrix_derived_from(config, alignment_alias)
-
-        matrix_alias = compute_subpool_matrix_alias(
-            config, library_id, output_type, datestamp
-        )
+            matrix_alias = compute_subpool_matrix_alias(
+                config, library_id, output_type, datestamp
+            )
 
         obj = {
             "uuid": None,
