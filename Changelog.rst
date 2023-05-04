@@ -1,6 +1,30 @@
 Changelog
 =========
 
+0.3.0
+-----
+
+Start adding IGVF portal compatibility
+
+  - New server names!
+  - New endpoints! (There are more types of files now)
+
+This lead to a new process_endpoint_file to replace the old
+process_file (now Deprecated) to specify where to upload files to.
+
+The submission main() function now also has an --end-point argument to
+specify the endpoint being posted to.
+
+There's new updates to support computing metadata needed to submit
+splitseq subpools to ENCODE.
+
+Fixed a bug where the list of files on an experiment object kept
+getting added to each type the object was accessed.
+
+Also use default_analysis to figure out which set of analysis files
+encoded.EncodeExperiment should be returning instead of just
+assuming it was the first set.
+
 0.2.0
 -----
 
