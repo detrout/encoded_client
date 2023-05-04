@@ -1167,22 +1167,18 @@ class EncodeExperiment(Mapping):
                 file_replicate_map[f["@id"]] = f["replicate"]["@id"]
 
         derived_map = {}
-        #for f in self._json["files"]:
         for file_id in self.analyses[0]["files"]:
             f = self._server.get_json(file_id)
             for derived_from in f.get("derived_from", []):
                 analyses = [x["@id"] for x in f.get("analyses", [])]
-                print(f["accession"], f.get("output_type"), derived_from, analyses)
                 if derived_from in our_files:
                     derived_map[f["@id"]] = derived_from
 
-        print("Derived map", derived_map)
         for derived_file in derived_map:
             file_replicate_map[derived_file] = find_source_replicate(
                 derived_map, derived_file, file_replicate_map
             )
 
-        print("Replicate map", file_replicate_map)
         self._replicate_file_map = {}
         for file_id in file_replicate_map:
             self._replicate_file_map.setdefault(file_replicate_map[file_id], []).append(
