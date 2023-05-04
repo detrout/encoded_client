@@ -262,7 +262,7 @@ def main(cmdline=None):
     book = open_book(args.spreadsheet_file)
     files = book.parse(args.sheet_name, header=0)
     try:
-        process_files(server, args.end_point, files, args.dry_run)
+        process_endpoint_files(server, args.end_point, files, args.dry_run)
     except Exception as e:
         logger.error(e)
 
