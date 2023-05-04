@@ -37,7 +37,8 @@ class TestSubmission(TestCase):
         self.assertIsNone(self.example_files.iloc[0]["uuid"])
         self.assertIsNone(self.example_files.iloc[0]["accession"])
 
-        self.assertRaises(DeprecationWarning, process_files, server, self.example_files, dry_run=True)
+        self.assertRaises(
+            DeprecationWarning, process_files, server, self.example_files, dry_run=True)
         process_endpoint_files(server, "/files/", self.example_files, dry_run=True)
 
         self.assertEqual(self.example_files.iloc[0]["accession"], "would create")
