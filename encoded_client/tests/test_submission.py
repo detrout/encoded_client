@@ -4,7 +4,7 @@ from unittest import TestCase
 import pytest
 
 from ..encoded import ENCODED
-from ..submission import process_files, main
+from ..submission import process_files, process_endpoint_files, main
 
 
 class TestSubmission(TestCase):
@@ -36,7 +36,9 @@ class TestSubmission(TestCase):
         server = ENCODED("test.encodedcc.org")
         self.assertIsNone(self.example_files.iloc[0]["uuid"])
         self.assertIsNone(self.example_files.iloc[0]["accession"])
-        process_files(server, self.example_files, dry_run=True)
+
+        self.assertRaises(DeprecationWarning, process_files, server, self.example_files, dry_run=True)
+        process_endpoint_files(server, "/files/", self.example_files, dry_run=True)
 
         self.assertEqual(self.example_files.iloc[0]["accession"], "would create")
 

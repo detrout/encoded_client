@@ -50,14 +50,33 @@ def run_aws_cp(pathname, creds):
         logger.info("Upload of %s finished in %.2f seconds", pathname, end - start)
 
 
-def process_files(server, end_point, files, dry_run):
+def process_endpoint_files(server, end_point, files, dry_run):
     """Validate sheet and then upload files
+
+    Parameters:
+      - server: encoded_client.ENCODED instance
+      - endpoint: url fragment indicating where to post files to
+      - files: metadata DataFrame describing files to submit
+      - dry_run: boolean indicating if we should avoid permanent changes
     """
     logger.info('Validating metadata')
     validator = DCCValidator(server=server)
 
     logger.info('Uploading files')
     return upload(server, end_point, validator, files, dry_run=dry_run)
+
+
+def process_files(server, files, dry_run):
+    """Validate sheet and then upload files to the ENCODE portal
+
+    Parameters:
+      - server: encoded_client.ENCODED instance
+      - files: metadata DataFrame describing files to submit
+      - dry_run: boolean indicating if we should avoid permanent changes
+    """
+    raise DeprecationWarning(
+        "process_files is deprecated in favor of process_endpoint_files")
+    return process_files(server, "/files/", files, dry_run)
 
 
 def upload(server, end_point, validator, files, dry_run=True, retry=False):
