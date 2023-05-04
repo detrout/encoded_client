@@ -1487,7 +1487,7 @@ QUALITY_METRIC_PARSERS = {
 def make_attachment(local_filename, mime_type=None, remote_filename=None):
     local_filename = Path(local_filename)
     if mime_type is None:
-        mime_type = document_mime_type_default[filename.suffix]
+        mime_type = document_mime_type_default[local_filename.suffix]
         if mime_type is None:
             raise ValueError("Unrecognized filename extension")
 
