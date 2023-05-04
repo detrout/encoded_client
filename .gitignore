@@ -1,7 +1,9 @@
 *~
+\.#*
 *.py[co]
 __pycache__/
 .coverage
+htmlcov/
 .tox/
 *.egg-info/
 dist/
