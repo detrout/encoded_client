@@ -1135,6 +1135,7 @@ class EncodeExperiment(Mapping):
     def __init__(self, server, json=None):
         self._server = server
         self._json = json
+        self._preferred_analysis = None
         self._replicates = []
         self._schema_version_check()
         self._replicate_file_map = {}
@@ -1167,7 +1168,7 @@ class EncodeExperiment(Mapping):
                 file_replicate_map[f["@id"]] = f["replicate"]["@id"]
 
         derived_map = {}
-        for file_id in self.analyses[0]["files"]:
+        for file_id in self.preferred_analysis["files"]:
             f = self._server.get_json(file_id)
             for derived_from in f.get("derived_from", []):
                 analyses = [x["@id"] for x in f.get("analyses", [])]
@@ -1197,6 +1198,16 @@ class EncodeExperiment(Mapping):
                 self._replicates.append(EncodeReplicate(replicate, self))
 
         return self._replicates
+
+    @property
+    def preferred_analysis(self):
+        if self._preferred_analysis is None:
+            default_analysis_id = self._json["default_analysis"]
+            for analysis in self._json["analyses"]:
+                if analysis["@id"] == default_analysis_id:
+                    self._preferred_analysis = analysis
+
+        return self._preferred_analysis
 
     def __getattr__(self, key):
         if self._json is None:
