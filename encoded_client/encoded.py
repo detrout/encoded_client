@@ -1241,15 +1241,12 @@ class EncodeReplicate(Mapping):
             return []
 
         file_ids = self._experiment._replicate_file_map[self._json["@id"]]
+        known_files = [x["@id"] for x in self._files]
         for file_id in file_ids:
-            f = self._experiment._server.get_json(file_id)
-            LOGGER.debug("File", f["@id"], "dataset?", f["dataset"], "matches experiment", self._experiment["accession"])
-            self._files.append(EncodeFile(f, self))
-        print(len(self._files))
-        #if len(self._files) != len(file_ids):
-        #    for f in self._experiment["files"]:
-        #        if f["@id"] in file_ids:
-        #            self._files.append(EncodeFile(f, self))
+            if file_id not in known_files:
+                f = self._experiment._server.get_json(file_id)
+                LOGGER.debug("File", f["@id"], "dataset?", f["dataset"], "matches experiment", self._experiment["accession"])
+                self._files.append(EncodeFile(f, self))
 
         return self._files
 
