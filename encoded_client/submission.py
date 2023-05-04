@@ -3,6 +3,7 @@
 from argparse import ArgumentParser
 import logging
 import json
+from itertools import chain
 import os
 import pandas
 import subprocess
@@ -13,6 +14,17 @@ from .encoded import ENCODED, DCCValidator, HTTPError
 from .sheet import open_book, save_book
 
 logger = logging.getLogger(__name__)
+
+
+ENCODE_SERVERS = [
+    'www.encodeproject.org',
+    'test.encodedcc.org',
+]
+
+IGVF_SERVERS = [
+    'api.sandbox.igvf.org',
+    'api.data.igvf.org'
+ ]
 
 
 def check_aws(dry_run):
@@ -208,23 +220,19 @@ def main(cmdline=None):
         '-s',
         '--server',
         required=True,
-        choices=[
-            'www.encodeproject.org',
-            'test.encodedcc.org',
-            'api.sandbox.igvf.org',
-            'api.data.igvf.org'
-        ],
+        choices=list(chain(ENCODE_SERVERS, IGVF_SERVERS)),
         help='DCC Server to upload to'
     )
     parser.add_argument(
         '-e',
         '--end-point',
         choices=[
+            '/file/',
             'file',
             'reference_data',
             'sequence_data',
         ],
-        required=True,
+        default=None,
         help='Name of end-point to be submitting to',
     )
     parser.add_argument(
@@ -244,8 +252,13 @@ def main(cmdline=None):
     parser.add_argument('-n', '--dry-run', action='store_true', default=False)
     args = parser.parse_args(cmdline)
 
+    if args.server in ENCODE_SERVERS:
+        args.end_point == "/file/"
+    elif args.end_point is None:
+        parser.error("IGVF requires setting a file end point")
+
     if args.sheet_name is None:
-        if args.end_point == "file":
+        if args.end_point in ("file", "/file/"):
             args.sheet_name = "File"
         else:
             args.sheet_name = args.end_point
