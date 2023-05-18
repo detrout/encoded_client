@@ -230,7 +230,7 @@ def main(cmdline=None):
             '/file/',
             'file',
             'reference_data',
-            'sequence_data',
+            'sequence_file',
         ],
         default=None,
         help='Name of end-point to be submitting to',
