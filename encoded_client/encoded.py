@@ -396,7 +396,7 @@ class ENCODED:
             "/mouse-donors/": "accession",
             "/replicates/": "uuid",
             "rodent_donor": "accession",
-            "sequence_data": "accession",
+            "sequence_file": "accession",
             "tissue": "accession",
         }
 
