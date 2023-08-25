@@ -398,6 +398,7 @@ class ENCODED:
             "rodent_donor": "accession",
             "sequence_file": "accession",
             "tissue": "accession",
+            "multiplexed_sample": "accession",
         }
 
         accession_name = collection_to_accession_name.get(collection, None)
