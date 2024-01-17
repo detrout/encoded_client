@@ -1220,7 +1220,7 @@ class EncodeExperiment(Mapping):
 
     def __getitem__(self, key):
         if key == "replicates":
-            return self.replicates()
+            return self.replicates
         return self._json.get(key)
 
     def __iter__(self):
