@@ -4,8 +4,11 @@ from unittest import TestCase
 import pytest
 
 from ..encoded import ENCODED
-from ..submission import process_files, process_endpoint_files, main
-
+from ..submission import (
+    process_files,
+    process_endpoint_files,
+    main
+)
 
 class TestSubmission(TestCase):
     def setUp(self):
