@@ -33,7 +33,7 @@ class TestSubmission(TestCase):
         )
 
     def test_process_files(self):
-        server = ENCODED("test.encodedcc.org")
+        server = ENCODED("encodedcc.org")
         self.assertIsNone(self.example_files.iloc[0]["uuid"])
         self.assertIsNone(self.example_files.iloc[0]["accession"])
 
