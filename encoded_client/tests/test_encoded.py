@@ -13,6 +13,7 @@ from ..encoded import (
     ENCODED_NAMESPACES,
     DCCValidator,
     DuplicateAliasError,
+    filter_aws_credentials,
     get_object_type,
     typed_column_parser,
     LOGGER,
@@ -361,6 +362,70 @@ class TestEncoded(TestCase):
         for k in ENCODED_NAMESPACES:
             self.assertIn(k, context)
             self.assertEqual(ENCODED_NAMESPACES[k], context[k])
+
+    def test_filter_aws_credentials_object(self):
+        r = {
+            "@id": "id",
+            "@type": ["a", "b", "c"],
+            "key": "value",
+            "upload_credentials": {
+                "access_key": "asdf",
+                "expiration": "2024-08-07T09:26:54+00:00",
+                "secret_key": "asdf",
+                "upload_url": "s3://a/b/c/d.gz",
+                "session_token": "asdf" * 10,
+                "federated_user_id": "asdf",
+                "federated_user_arn": "arn:aws:sts::asdf",
+            }
+        }
+
+        filtered = filter_aws_credentials(r)
+        self.assertNotEqual(filtered, r)
+        creds = filtered["upload_credentials"]
+        self.assertEqual(creds["access_key"], "*** AccessKey ***")
+        self.assertEqual(creds["expiration"], r["upload_credentials"]["expiration"])
+        self.assertEqual(creds["secret_key"], "*** SecretKey ***")
+        self.assertEqual(creds["session_token"], "*** SessionToken ***")
+
+        filtered = filter_aws_credentials(r, verbose=True)
+        self.assertEqual(filtered, r)
+        filtered_creds = filtered["upload_credentials"]
+        r_creds = r["upload_credentials"]
+        self.assertEqual(filtered_creds["access_key"], r_creds["access_key"])
+
+    def test_filter_aws_credentials_query(self):
+        r = {
+            "@id": "search",
+            "@graph": [{
+                "@id": "id",
+                "key": "value",
+                "upload_credentials": {
+                    "access_key": "asdf",
+                    "expiration": "2024-08-07T09:26:54+00:00",
+                    "secret_key": "asdf",
+                    "upload_url": "s3://a/b/c/d.gz",
+                    "session_token": "asdf" * 10,
+                    "federated_user_id": "asdf",
+                    "federated_user_arn": "arn:aws:sts::asdf",
+                }
+            }],
+        }
+
+        filtered = filter_aws_credentials(r)
+        self.assertNotEqual(filtered, r)
+        creds = filtered["@graph"][0]["upload_credentials"]
+        self.assertEqual(creds["access_key"], "*** AccessKey ***")
+        self.assertEqual(
+            creds["expiration"],
+            r["@graph"][0]["upload_credentials"]["expiration"])
+        self.assertEqual(creds["secret_key"], "*** SecretKey ***")
+        self.assertEqual(creds["session_token"], "*** SessionToken ***")
+
+        filtered = filter_aws_credentials(r, verbose=True)
+        self.assertEqual(filtered, r)
+        filtered_creds = filtered["@graph"][0]["upload_credentials"]
+        r_creds = r["@graph"][0]["upload_credentials"]
+        self.assertEqual(filtered_creds["access_key"], r_creds["access_key"])
 
 
 class TestTypedColumnParser(TestCase):

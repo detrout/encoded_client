@@ -1512,6 +1512,35 @@ def make_attachment(local_filename, mime_type=None, remote_filename=None):
     }
     return payload
 
+def filter_aws_credentials(value, verbose=False):
+    if verbose:
+        return value
+
+    value = value.copy()
+    replacements = {
+        "access_key": "*** AccessKey ***",
+        "secret_key": "*** SecretKey ***",
+        "session_token": "*** SessionToken ***",
+    }
+    for k in value:
+        print(k)
+        if k in replacements:
+            value[k] = replacements[k]
+            print("  ", value[k])
+        elif isinstance(value[k], dict):
+            value[k] = filter_aws_credentials(value[k])
+        elif isinstance(value[k], list):
+            newlist = []
+            for x in value[k]:
+                if isinstance(x, dict):
+                    newlist.append(filter_aws_credentials(x, verbose=verbose))
+                else:
+                    newlist.append(x)
+            value[k] = newlist
+
+    print(value)
+    return value
+
 
 if __name__ == "__main__":
     # try it
