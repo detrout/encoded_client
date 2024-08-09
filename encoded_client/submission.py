@@ -9,6 +9,7 @@ import pandas
 import subprocess
 import sys
 import time
+from urllib.parse import urlparse
 
 from .encoded import ENCODED, DCCValidator, HTTPError
 from .sheet import open_book, save_book
@@ -60,6 +61,22 @@ def run_aws_cp(pathname, creds):
     else:
         end = time.time()
         logger.info("Upload of %s finished in %.2f seconds", pathname, end - start)
+
+
+def parse_s3_url(url: str):
+    """Split an s3 url into bucket and path
+
+    :param url: A url that must start with the scheme s3://
+    :type url: str
+
+    :return: A tuple of (s3 bucket name, path in bucket)
+    :rtype: tuple
+    """
+    url = urlparse(url)
+    if url.scheme != "s3":
+        raise ValueError("Not s3 url {}".format(url))
+
+    return url.netloc, url.path[1:]
 
 
 def process_endpoint_files(server, end_point, files, dry_run):

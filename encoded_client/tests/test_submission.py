@@ -5,6 +5,7 @@ import pytest
 
 from ..encoded import ENCODED
 from ..submission import (
+    parse_s3_url,
     process_files,
     process_endpoint_files,
     main
@@ -52,3 +53,11 @@ class TestSubmission(TestCase):
             self.example_files.to_excel(out, sheet_name="File", index=False)
 
             main(["-s", "test.encodedcc.org", "-f", out.name, "--dry-run"])
+
+    def test_parse_s3_url(self):
+        url = "s3://igvf-files-staging/2023/05/18/TSTFI11810904.fastq.gz"
+        bucket, path = parse_s3_url(url)
+        self.assertEqual(bucket, "igvf-files-staging")
+        self.assertEqual(path, "2023/05/18/TSTFI11810904.fastq.gz")
+
+        self.assertRaises(ValueError, parse_s3_url, "http://genome.gov")
