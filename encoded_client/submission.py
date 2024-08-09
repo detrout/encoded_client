@@ -232,6 +232,11 @@ def make_upload_filename(metadata, server=None):
 
 
 def main(cmdline=None):
+    """Use a spreadsheet to upload files to an IGVF/Encode protal
+
+    :param cmdline: List of arguments for the script
+    :type cmdline: list[str], optional
+    """
     parser = ArgumentParser()
     parser.add_argument(
         '-s',
