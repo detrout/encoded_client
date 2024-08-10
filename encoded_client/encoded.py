@@ -1460,7 +1460,7 @@ class EncodeExperiment(Mapping):
                 file_replicate_map[f["@id"]] = f["replicate"]["@id"]
 
         derived_map = {}
-        for file_id in self.preferred_analysis["files"]:
+        for file_id in self.preferred_analysis.get("files", []):
             f = self._server.get_json(file_id)
             for derived_from in f.get("derived_from", []):
                 analyses = [x["@id"] for x in f.get("analyses", [])]
@@ -1494,10 +1494,13 @@ class EncodeExperiment(Mapping):
     @property
     def preferred_analysis(self):
         if self._preferred_analysis is None:
-            default_analysis_id = self._json["default_analysis"]
-            for analysis in self._json["analyses"]:
-                if analysis["@id"] == default_analysis_id:
-                    self._preferred_analysis = analysis
+            default_analysis_id = self._json.get("default_analysis")
+            if default_analysis_id is None:
+                self._preferred_analysis = {}
+            else:
+                for analysis in self._json["analyses"]:
+                    if analysis["@id"] == default_analysis_id:
+                        self._preferred_analysis = analysis
 
         return self._preferred_analysis
 
