@@ -25,7 +25,7 @@ from .rdfns import (
 )
 
 import lxml.html
-import lxml.html.clean
+import lxml_html_clean
 
 logger = logging.getLogger(__name__)
 
@@ -271,7 +271,7 @@ def sanitize_literal(node):
     s = node.value
     if len(s) > 0:
         element = lxml.html.fromstring(s)
-        cleaner = lxml.html.clean.Cleaner(page_structure=False)
+        cleaner = lxml_html_clean.Cleaner(page_structure=False)
         element = cleaner.clean_html(element)
         if six.PY3:
             text = lxml.html.tostring(element, encoding=str)
