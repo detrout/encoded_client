@@ -1437,7 +1437,7 @@ class EncodeExperiment(Mapping):
             self._calculate_derived_from()
 
     def _schema_version_check(self):
-        supported_versions = {"33", "34", "35", "36"}
+        supported_versions = {"33", "34", "35", "36", "37"}
         if self.schema_version not in supported_versions:
             LOGGER.warning(
                 "New schema version {} may not be supported".format(self.schema_version)
