@@ -1,8 +1,10 @@
 API Documentation
 =================
 
-.. automodule:: encoded_client
+.. toctree::
+   :caption: API Reference
 
-.. autoclass:: encoded_client.ENCODED
-   :members:               
-                
+   api/encoded.rst
+   api/hashfile.rst
+   api/sheet.rst
+   api/submission.rst

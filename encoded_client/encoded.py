@@ -1,6 +1,7 @@
-"""Interface with encoded software for ENCODE3 data submission & warehouse
+"""Interface for the encoded software for IGVF and ENCODE object database
 
-This allows retrieving blocks
+The classes here are intended to help manage the HTTP requsts and authentication
+necessary to return the JSON-LD objects.
 """
 from __future__ import print_function
 from datetime import datetime
@@ -142,11 +143,29 @@ document_mime_type_default = {
 
 
 class DuplicateAliasError(jsonschema.ValidationError):
+    """Exception to indicate that an alias was reused in this submission
+
+    aliases on the portal must be unique
+    """
     pass
 
 
 def get_object_type(obj):
-    """Return type for a encoded object"""
+    """Return type for a encoded object
+
+    Types in the encoded database are arrainged most specific to least
+    specific. For instance an IGVF SequenceFile's type list is:
+
+    ['SequenceFile', 'File', 'Item']
+
+    And this will return the most specific type SequenceFile.
+
+    :param obj: A dictionary containing a JSON-LD object
+    :rtype str: The first type
+
+    :raises ValueError: if object lacks an indication that this looks like a
+                        JSON-LD object this will raise a ValueError.
+    """
     obj_type = obj.get("@type")
     if not obj_type:
         raise ValueError("None type")
@@ -160,7 +179,16 @@ def get_object_type(obj):
 class ENCODED:
     """Programatic object orientated access to encoded
 
-    Encoded is the software powering ENCODE3 and 4's submit site.
+    encoded is the software powering the IGVF and ENCODE object database.
+    It's also been used in some other projects as well.
+
+    :param server: Domain name we are expecting to connect to.
+    :type server: str
+    :param context: A JSON-LD context when None uses ENCODED_CONTEXT as a default
+    :type context: dict, optional
+    :param namespaces: A dictionary of short CURIE names to urls, if None defaults to
+                       ENCODED_NAMESPACES
+    :type namespaces: dict, optional
     """
 
     def __init__(self, server, contexts=None, namespaces=None):
@@ -180,12 +208,27 @@ class ENCODED:
 
     @property
     def auth(self):
+        """A basic HTTP authentication tuple or None"""
         if self.username is None and self.password is None:
             return None
 
         return (self.username, self.password)
 
     def load_auth(self):
+        """Abstract finding the access tokens
+
+        This will first try looking for the DCC_API_KEY/DCC_SECRET_KEY
+        environment variables, and fhat fails, then will look in a
+        .netrc file.
+
+        If the server and username are provided but no password, it
+        will also attempt to use the python module keyring to retrieve
+        the password.
+        https://pypi.org/project/keyring/
+
+        If self.username and self.password are already set this
+        function does nothing.
+        """
         if self.username is None:
             self.username = os.environ.get("DCC_API_KEY")
             self.password = os.environ.get("DCC_SECRET_KEY")
@@ -202,6 +245,11 @@ class ENCODED:
                 pass
 
     def load_netrc(self):
+        """Load authentication tokens from the .netrc file
+
+        Uses the server name as the machine name for the look up for
+        the username and password
+        """
         netrc_path = Path("~/.netrc").expanduser()
         if netrc_path.exists():
             import netrc
@@ -215,11 +263,18 @@ class ENCODED:
     def add_jsonld_context(self, tree, default_base):
         """Add contexts to various objects in the tree.
 
-        :param tree: is a json tree returned from the DCC's encoded database.
-        :param contexts: is a dictionary of dictionaries containing contexts
-                         for the various  possible encoded classes.
-        :param base: if supplied allows setting the base url that relative
-                     urls will be resolved against.
+        This adds in some JSON-LD @context to the root and child
+        objects if they were missing
+
+        :param tree: is a nested tree of JSON-LD objects returned from
+                     the object database.
+        :type tree: dict
+        :param default_base: if supplied allows setting the base url that relative
+                             urls will be resolved against.
+        :type default_base: str
+
+        :return: Nothing, though as a side effect it modifies the
+                 passed in objects in place
         """
         self.add_jsonld_child_context(tree, default_base)
         self.add_jsonld_namespaces(tree["@context"])
@@ -229,6 +284,15 @@ class ENCODED:
 
         This is recursive because some of the IDs were relative URLs
         and I needed a way to properly compute a the correct base URL.
+
+        :param obj: An object retrieved from the portal
+        :type obj: dict
+        :param default_base: the default base url to use for this object
+        :type default_base: str
+
+        See https://www.w3.org/TR/json-ld/#the-context for information
+        about the JSON-LD context
+
         """
         # pretend strings aren't iterable
         if isinstance(obj, six.string_types):
@@ -259,7 +323,12 @@ class ENCODED:
     def add_jsonld_namespaces(self, context):
         """Add shortcut namespaces to a context
 
-        Only needs to be run on the top-most context
+        Only needs to be run on the top-most context to set the
+        default url mappings.
+
+        :param context: a dictionary that represent a JSON-LD context.
+        :type context: dict
+
         """
         context.update(self.namespaces)
 
@@ -268,6 +337,15 @@ class ENCODED:
 
         self.contexts[None] = default context attributes added to any type
         self.contexts[type] = context attributes for this type.
+
+        :param obj: An object from that portal that might need to have more
+                    details added to JSON-LD context.
+        :type obj: dict
+        :param default_base: The default base url to use for object ids.
+        :type default_base: str
+
+        :returns: The completed JSON-LD context
+        :rtype: dict
         """
         obj_type = get_object_type(obj)
         context = {
@@ -282,6 +360,16 @@ class ENCODED:
         return context
 
     def get_experiment(self, obj_id):
+        """Retrieve an ENCODE experiment as class
+
+        This was an attempt to streamline some trying to find relationships between
+        the various file objects, but is specific to ENCODE.
+
+        :param obj_id: The @id for an experiment
+
+        :returns: a class initialized with the JSON-LD object
+        :rtype: EncodeExperiment
+        """
         obj = self.get_json(obj_id)
         if obj["@type"][0] != "Experiment":
             raise ValueError("Object is not an experiment")
@@ -295,10 +383,15 @@ class ENCODED:
         if no keyword arguments are specified it will default to adding limit=all
         Alternative keyword arguments can be passed in and will be sent to the host.
 
-        Known keywords are:
-          limit - (integer or 'all') how many records to return, all for all of them
-          embed - (bool) if true expands linking ids into their associated object.
-          format - text/html or application/json
+        see :py:meth:`ENCODED.get_response` for other known keyword arguments that
+        can be passed to this function.
+
+        :param obj_id: an object id url fragment, typically something like
+                       "/measurement-set/accession/"
+        :type obj_id: str
+
+        :returns: the JSON retrieved from the portal
+        :rtype: dict
         """
         kwargs["headers"] = self.json_headers
 
@@ -311,6 +404,18 @@ class ENCODED:
         """Get ENCODE object as JSONLD annotated with classses contexts
 
         see get_json for documentation about what keywords can be passed.
+
+        :param obj_id: an object id url fragment, typically something like
+                       "/measurement-set/accession/"
+        :type obj_id: str
+
+        Also accepts other arbitrary keyword objects see
+        :py:meth:`ENCODED.get_response` for known arguments
+
+        :returns: the JSON retrieved from the portal, with any additional
+                  JSON-LD context values added to the object
+        :rtype: dict
+
         """
         url = self.prepare_url(obj_id)
         json = self.get_json(obj_id, **kwargs)
@@ -325,9 +430,24 @@ class ENCODED:
         Alternative keyword arguments can be passed in and will be sent to the host.
 
         Known keywords are:
-          limit - (integer or 'all') how many records to return, all for all of them
-          embed - (bool) if true expands linking ids into their associated object.
-          format - text/html or application/json
+
+            limit
+                (integer or 'all') how many records to return, all for all of them
+
+            embed
+                (bool) if true expands linking ids into their associated object.
+
+            format
+                text/html or application/json
+
+        :param fragment: a url fragment
+        :type fragment: str
+
+        This function accepts an arbitrary set of other keyword arguments
+        which will be passed as arguments to the database server.
+
+        :returns: returns the Response object from requests
+        :rtype: requests.Response
         """
         url = self.prepare_url(fragment)
         LOGGER.info("requesting url: {}".format(url))
@@ -364,15 +484,16 @@ class ENCODED:
         object type name or the collection name one posts to.
 
         For example
-           server.get_schema_url('experiment') and
-           server.get_schema_url('/experiments/') both resolve to
-           SERVER/profiles/experiment.json
 
-        Arguments:
-           object_type (str): either ENCODED object name or collection
+        get_schema_url('experiment') and
+        get_schema_url('/experiments/') both resolve to
+        SERVER/profiles/experiment.json
 
-        Returns:
-           Schema URL
+        :param object_type: either an ENCODED object name or a collection
+        :type object_type: str
+
+        :returns: Schema URL
+
         """
         object_type = COLLECTION_TO_TYPE.get(object_type, object_type).lower()
         schema_name = SCHEMA_TYPE_OVERRIDES.get(object_type, object_type)
@@ -384,6 +505,15 @@ class ENCODED:
 
         This is used by the sheet parsing code to know what column the
         objects accession is in.
+
+        :param collection: Object at the portal are grouped by their
+                           collection type
+        :type collection: str
+
+        :return: given the name of a collection object return what the primary
+                 key attribute name should be. Usually it's accession, but
+                 there were a few objects that used uuid.
+        :type: str
         """
         collection_to_accession_name = {
             "/annotations/": "accession",
@@ -415,8 +545,15 @@ class ENCODED:
 
         Some of the nested dictionaries lack the @id or @type
         information necessary to convert them.
+
+        :param obj: An dictionary that may contain an encoded object
+        :type obj: dict
+
+        :returns: True if it is has a mapping and has an @id and @type
+                  object, otherwise false.
+        :rtype: bool
         """
-        if not isinstance(obj, Iterable):
+        if not isinstance(obj, Mapping):
             return False
 
         if "@id" in obj and "@type" in obj:
@@ -424,7 +561,17 @@ class ENCODED:
         return False
 
     def patch_json(self, obj_id, changes):
-        """Given a dictionary of changes push them as a HTTP patch request"""
+        """Given a dictionary of changes push them as a HTTP patch request
+
+        :param obj_id: the object id as a url or url fragment that
+                       should be modified.
+        :type obj_id: str
+        :param changes: a dictionary of attributes that should be
+                        updated at the portal
+        :type changes: dict
+
+        :raises: requests.HTTPError if something goes wrong with the PATCH
+        """
         url = self.prepare_url(obj_id)
         LOGGER.info("PATCHing to %s", url)
         payload = json.dumps(changes)
@@ -438,6 +585,19 @@ class ENCODED:
         return response.json()
 
     def put_json(self, obj_id, new_object):
+        """Create a new object at the portal using a PUT request
+
+        :param obj_id: the object id as a url or url fragment that
+                       should be modified.
+        :type obj_id: str
+        :param new_object: a dictionary of a metadata object ready to
+                           create at the portal
+        :type new_object: dict
+
+        :returns: json object from the portal
+
+        :raises: requests.HTTPError if something goes wrong with the PUT
+        """
         url = self.prepare_url(obj_id)
         LOGGER.info("PUTing to %s", url)
         payload = json.dumps(new_object)
@@ -450,6 +610,20 @@ class ENCODED:
         return response.json()
 
     def post_json(self, collection_id, new_object):
+        """Create a new object at the portal using a POST request
+
+        :param obj_id: the object id as a url or url fragment that
+                       should be modified.
+        :type obj_id: str
+        :param new_object: a dictionary of a metadata object ready to
+                           create at the portal
+        :type new_object: dict
+
+        :returns: the response json object
+        :rtype: dict
+
+        :raises: requests.HTTPError if something goes wrong with the POST
+        """
         url = self.prepare_url(collection_id)
         LOGGER.info("POSTing to %s", url)
         payload = json.dumps(new_object)
@@ -472,15 +646,20 @@ class ENCODED:
         and in some cases also include some additional type information.
         (see TypedColumnParser)
 
-        :param collection: (str) name of collection to create new objects in
-        :param sheet: (pandas.DataFrame) DataFrame with objects to create,
+        :param collection: name of collection to create new objects in
+        :type collection: str
+        :param sheet: DataFrame with objects to create,
                       assuming the appropriate accession number is empty.
                       additional the accession number and uuid is updated if
                       the object is created.
-        :param dry_run: (bool) whether or not to skip the code to post the objects
-        :param verbose: (bool) print the http responses.
+        :type sheet: pandas.DataFrame
+        :param dry_run: whether or not to skip the code to post the objects
+        :type dry_run: bool
+        :param verbose: print the http responses.
+        :type verbose: bool
 
         :returns: list of created objects.
+        :rtype: list[dict]
 
         :raises: jsonschema.ValidationError if the object doesn't validate against
                  the encoded jsonschema.
@@ -524,6 +703,23 @@ class ENCODED:
         return created
 
     def prepare_objects_from_sheet(self, collection, sheet, validator=None):
+        """Do a batch posting of a number of objects for a specific collection
+
+        This is typically used to create a number of objects for a particular
+        object type at the portal.
+
+        :param collection: An endpoint that represents a collection. Typically
+                           things like "sequencing_file" or "measurement_set".
+        :type collection: str
+        :param sheet: A spreadsheet like table with rows representing objects and
+                      columns representing the various attributes in those objects.
+        :type sheet: pandas.DataFrame
+        :param validator: the objects created from the sheet will be passed
+                          through the DCCValidator to make sure they are correct.
+                          However one needs to use a shared DCCValidator object
+                          to resolve aliases defined between sheets.
+        :type validator: DCCValidator, optional
+        """
         accession_name = self.get_accession_name(collection)
         to_create = []
         if validator is None:
@@ -560,9 +756,29 @@ class ENCODED:
 
         return to_create
 
-    def post_object_from_row(
-        self, collection, i, new_object, dry_run=True, verbose=True
-    ):
+    def post_object_from_row(self, collection, i, new_object, dry_run=True, verbose=True):
+        """Post one row of a dataframe.
+
+        :param collection:
+        :type collection: str
+        :param i:
+        :type i: int
+        :param new_object:
+        :type new_object: dict
+        :param dry_run: Defaults to True, and if True it just runs the
+                        validation and marks if the object would be
+                        created. When false it actually posts the object
+                        to the portal
+        :type dry_run: bool, optional
+        :param verbose: If True print the requests.Response object. This can be
+                        useful for recovery if it crashes mid notebook.
+        :type verbose: bool, optional
+
+        :return: The created object from the portal
+        :rtype: dict
+
+        :raises: requests.HTTPError
+        """
         accession_name = self.get_accession_name(collection)
 
         if not dry_run:
@@ -589,13 +805,19 @@ class ENCODED:
         * requests over http
         * requests to self.server
 
-        This allows fairly flexible urls. e.g.
+        This allows fairly flexible urls. e.g:
 
-        prepare_url('/experiments/ENCSR000AEG')
-        prepare_url('submit.encodedcc.org/experiments/ENCSR000AEG')
-        prepare_url('http://submit.encodedcc.org/experiments/ENCSR000AEG?limit=all')
+          - prepare_url('/experiments/ENCSR000AEG')
+          - prepare_url('submit.encodedcc.org/experiments/ENCSR000AEG')
+          - prepare_url('http://submit.encodedcc.org/experiments/ENCSR000AEG?limit=all')
 
         should all return the same url
+
+        :param request_url: some portion of a url fragment
+        :type request_url: str
+
+        :return: A complete and fully qualified URL.
+        :rtype: str
         """
         # clean up potentially messy urls
         url = urlparse(request_url)._asdict()
@@ -611,6 +833,20 @@ class ENCODED:
         return url
 
     def remove_sheet_aliases(self, validator, sheet):
+        """Remove aliases from a validator for a particular sheet
+
+        When repeatedly running the validator, the check to see if
+        aliases are duplicated will be triggered unless we remove them
+        before we re-validate the same sheet.
+
+        :param validator: a validator object that needs to have some aliases
+                          removed.
+        :type validator: DCCValidator
+        :param sheet: the current sheet of objects that need to have their
+                      aliases removed.
+        :type sheet: pandas.DataFrame
+
+        """
         field_name = "aliases:array"
         if field_name in sheet.columns:
             for field in sheet[field_name]:
@@ -622,14 +858,19 @@ class ENCODED:
     def search_jsonld(self, **kwargs):
         """Send search request to ENCODED
 
-        to do a general search do
-            searchTerm=term
+        to do a general search call with
 
-        Known keywords allowed on search:
-          limit - (integer or 'all') how many records to return, all for all of them
+        search_jsonld(searchTerm="term")
+
+        other known keywords allowed on search are:
+
+        limit
+             (integer or 'all') how many records to return, all for all of them
              to be kinder to the server, set an arbitrary limit of 5,000. override
              with all if all is really needed
-          type - object type
+        type
+             portal object type with a leading @ sign
+
         """
         if len(kwargs) == 0:
             kwargs["limit"] = "5000"
@@ -653,26 +894,15 @@ class ENCODED:
         self.add_jsonld_context(result, self.prepare_url(result["@id"]))
         return result
 
-    def validate(self, obj, object_type=None):
-        """Validate an object against the ENCODED schema
-
-        Args:
-            obj (dictionary): object attributes to be submitted to encoded
-            object_type (string): ENCODED object name.
-
-        Raises:
-            ValidationError: if the object does not conform to the schema.
-        """
-        raise DeprecationWarning(
-            "there is now a standalone validator class DCCValidator"
-        )
-
     @property
     def user(self):
-        """Return my user object
+        """Return the user object that contains an access_key
 
         The programatic API uses an access code, which is different
-        from the user ID
+        from the user ID.
+
+        :return: The dictionary object representing the logged in user.
+        :rtype: dict | None
         """
         if self._user is None:
             if self.username is None:
@@ -698,7 +928,9 @@ class DCCValidator:
     def __getitem__(self, object_type):
         """Return customized validator for the object type
 
-        :param str object_type: One of the DCC object types like biosample or library
+        :param object_type: One of the DCC object types like biosample or library
+        :type object_type: str
+
         :returns: Either a cached jsonschema validator or creates a new one if needed
         """
         if object_type not in self._schemas:
@@ -732,12 +964,15 @@ class DCCValidator:
     def validate(self, obj, object_type):
         """Validate an object against the ENCODED schema
 
-        Args:
-            obj (dictionary): object attributes to be submitted to encoded
-            object_type (string): ENCODED object name.
+        Also checks to make sure RNA-seq is spelled as RNA-seq and not any
+        other capitalization
 
-        Raises:
-            ValidationError: if the object does not conform to the schema.
+        :param obj: An object dictionary to be submitted to the portal
+        :type obj: dict
+        :param object_type: What portal schema should we validate this object
+                            against.
+
+        :raises: ValidationError if the object does not conform to the schema.
         """
         object_type = object_type if object_type else get_object_type(obj)
 
@@ -758,8 +993,11 @@ class DCCValidator:
     def strip_jsonld_attributes(self, obj):
         """Make copy of object with JSON-LD attributes
 
-        :param dict obj: dictionary to POST to the DCC as an json document
-        :returns: dict with jsonld attributes @id, and @type removed.
+        :param obj: dictionary to POST to the DCC as an json document
+        :type obj: dict
+
+        :return: copy of object with jsonld attributes @id, and @type removed.
+        :rtype: dict
         """
         hidden = obj.copy()
         if "@id" in hidden:
@@ -771,8 +1009,11 @@ class DCCValidator:
     def strip_uuid(self, obj):
         """Make copy of object with uuid removed
 
-        :param dict obj: dictionary to POST to the DCC as an json document
-        :returns: dict with jsonld attributes uuid removed.
+        :param obj: dictionary to POST to the DCC as an json document
+        :type obj: dict
+
+        :return: copy of object with uuid attribute removed.
+        :rtype: dict
         """
         hidden = obj.copy()
         if "uuid" in hidden:
@@ -785,7 +1026,9 @@ class DCCValidator:
         This allows us to find it again for validation, even if it hasn't
         been submitted yet.
 
-        :param dict obj: dictionary to POST to the DCC as an json document
+        :param obj: dictionary to POST to the DCC as an json document
+        :type obj: dict
+
         :returns: None
         """
         # store aliases
@@ -797,8 +1040,16 @@ class DCCValidator:
     def create_dcc_validator(self, schema):
         """Return jsonschema validator customized for ENCODE DCC schemas
 
-        :param jsonschema schema: dictionary containing a loaded jsonschema document
-        :returns: customized jsonschema validator for the provided schema
+        The validator is also overloaded to handle validating of the
+        more complex attribute types like linkTo or
+        calculatedProperty.
+
+        :param schema: dictionary containing a loaded jsonschema document
+        :type schema: dict holding a jsonschema.
+
+        :return: customized jsonschema validator for the provided schema
+        :rtype: jsonschema.Draft4Validator
+
         """
         validator = jsonschema.validators.extend(
             jsonschema.Draft4Validator,
@@ -921,6 +1172,8 @@ class DCCValidator:
 
 
 class TypedColumnParser(object):
+    """Functions to help parse columns annotated with types in DataFrames
+    """
     @staticmethod
     def parse_sheet_array_type(value):
         """Helper function to parse :array columns in sheet"""
@@ -1009,16 +1262,40 @@ typed_column_parser = TypedColumnParser()
 class Document:
     """Helper class for registering documents
 
-    Usage:
-    lysis_uuid = 'f0cc5a7f-96a5-4970-9f46-317cc8e2d6a4'
+    Typically used like this in a notebook.
+
+    lysis_uuid = None
     lysis = Document(url_to_pdf, 'extraction protocol', 'Lysis Protocol')
     lysis.create_if_needed(server, lysis_uuid)
-    """
 
+    The result of create_if_needed will include a uuid and then I copied that
+    back up to replace the uuid so I could get get the same object, so after
+    running this once I then have
+
+    lysis_uuid = 'f0cc5a7f-96a5-4970-9f46-317cc8e2d6a4'
+
+    """
     award = "U54HG006998"
     lab = "/labs/barbara-wold"
 
     def __init__(self, url, document_type, description, aliases=None, filename=None, server=None):
+        """Construct a Document object.
+
+        :param url: path to where the document file is located
+        :type url: str or Path
+        :param document_type: what is the document type from the list of known portal
+                              document types
+        :type document_type: str
+        :param aliases: Various aliases to attach to this document
+        :type aliases: list, optional
+        :param filename: A filename used to override the automatic filename
+                         derived from the url. Occasionally the path includes
+                         values not allowed in the url fragment posted to
+                         the portal.
+        :type filename: str or Path
+        :param server: Server object to use for querying the portal
+        :type server: ENCODED
+        """
         assert server is None or isinstance(server, ENCODED)
 
         self.url = Path(url)
@@ -1045,6 +1322,19 @@ class Document:
         self.get_document(server)
 
     def get_document(self, server=None):
+        """Get the document from either the local filesystem or the database
+
+        It will try the local filesystem using url fragment relative
+        to the current directory first, otherwise if a server is provided
+        and the url starts with http or https it will request the document
+        object from the server
+
+        :param server: a configured ENCODED server object to use for API requests
+        :type server: ENCODED, optional
+
+        This will update several attributes of the current document object
+        after being called.
+        """
         parsed_url = urlparse(str(self.url))
         if self.url.exists():
             with open(self.url, "rb") as instream:
