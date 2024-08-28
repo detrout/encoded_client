@@ -516,6 +516,7 @@ class ENCODED:
         :type: str
         """
         collection_to_accession_name = {
+            "analysis_set": "accession",
             "/annotations/": "accession",
             "/biosamples/": "accession",
             "configuration_file": "accession",
@@ -523,6 +524,7 @@ class ENCODED:
             "/experiments/": "accession",
             "/files/": "accession",
             "/libraries/": "accession",
+            "matrix_file": "accession",
             "measurement_set": "accession",
             "/mouse-donors/": "accession",
             "/replicates/": "uuid",
