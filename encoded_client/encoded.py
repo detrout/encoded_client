@@ -926,6 +926,7 @@ class DCCValidator:
         self._http_cache = {}
         self._schemas = {}
         self._dcc_validators = {}
+        self._current_request_method = "POST"
 
     def __getitem__(self, object_type):
         """Return customized validator for the object type
@@ -1167,10 +1168,17 @@ class DCCValidator:
             )
 
     def requestMethodValidator(self, validator, method, instance, schema):
-        yield jsonschema.ValidationError(
-            "Users cannot touch properties with requestMethod properties %s"
-            % (schema["title"])
-        )
+        # see https://github.com/ENCODE-DCC/snovault src/snovault/schema_utils.py requestMethod
+        # for DACCs implementation
+        if isinstance(method, str):
+            method = [method]
+
+        if self._current_request_method not in method:
+            yield jsonschema.ValidationError(
+                "request method {} is not one of {} for {}".format(
+                    self._current_request_method,
+                    method,
+                    schema["title"]))
 
 
 class TypedColumnParser(object):
