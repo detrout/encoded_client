@@ -520,6 +520,8 @@ class ENCODED:
             "/annotations/": "accession",
             "/biosamples/": "accession",
             "configuration_file": "accession",
+            "curated_set": "accession",
+            "document": "uuid",
             "/documents/": "uuid",
             "/experiments/": "accession",
             "/files/": "accession",
@@ -530,6 +532,7 @@ class ENCODED:
             "/replicates/": "uuid",
             "rodent_donor": "accession",
             "sequence_file": "accession",
+            "tabular_file": "accession",
             "tissue": "accession",
             "multiplexed_sample": "accession",
         }
