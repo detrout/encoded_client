@@ -1373,7 +1373,8 @@ class Document:
                 self.md5sum = hashlib.md5(self.document)
                 self.urls = [self.url]
         else:
-            raise ValueError("Unable to retrieve document {}".format(self.url))
+            raise ValueError(
+                "Unable to find document {}. Is submitted_file_name correct?".format(self.url))
 
     def create_payload(self):
         document_payload = {
