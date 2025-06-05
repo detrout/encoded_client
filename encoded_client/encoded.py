@@ -546,7 +546,7 @@ class ENCODED:
         accession_name = collection_to_accession_name.get(collection, None)
         if accession_name is None:
             raise RuntimeError(
-                "Update list of collection to accession names for %s", collection
+                "Update list of collection to accession names for {}".format(collection)
             )
 
         return accession_name
