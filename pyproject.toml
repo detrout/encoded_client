@@ -12,7 +12,7 @@ write_to = "encoded_client/_version.py"
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist=py{39,310,311}
+envlist=py{311,312,313,314}
 skip_missing_interpreters=True
 
 [testenv]
