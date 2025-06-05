@@ -533,6 +533,7 @@ class ENCODED:
             "matrix_file": "accession",
             "measurement_set": "accession",
             "model_file": "accession",
+            "primary_cell": "accession",
             "/mouse-donors/": "accession",
             "reference_file": "accession",
             "/replicates/": "uuid",
