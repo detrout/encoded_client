@@ -525,6 +525,7 @@ class ENCODED:
             "document": "uuid",
             "/documents/": "uuid",
             "/experiments/": "accession",
+            "file": "accession",
             "/files/": "accession",
             "genome_browser_annotation_file": "accession",
             "image_file": "accession",
