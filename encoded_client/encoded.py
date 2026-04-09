@@ -7,7 +7,7 @@ from __future__ import print_function
 from datetime import datetime
 import pandas
 import base64
-from collections.abc import Sequence, Iterable, Mapping
+from collections.abc import Sequence, Mapping
 import hashlib
 import logging
 from pathlib import Path
