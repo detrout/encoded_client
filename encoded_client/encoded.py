@@ -535,6 +535,7 @@ class ENCODED:
             "model_file": "accession",
             "primary_cell": "accession",
             "/mouse-donors/": "accession",
+            "reference": "accession",
             "reference_file": "accession",
             "/replicates/": "uuid",
             "rodent_donor": "accession",
